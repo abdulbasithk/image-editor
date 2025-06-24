@@ -1,0 +1,54 @@
+/* ImageEditor Library Styles */
+
+/* Import component styles */
+@import './container.css';
+
+/* Global utility classes */
+.ie-hidden {
+  display: none !important;
+}
+
+.ie-visible {
+  display: block !important;
+}
+
+.ie-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.ie-no-select {
+  user-select: none;
+}
+
+.ie-pointer {
+  cursor: pointer;
+}
+
+.ie-grab {
+  cursor: grab;
+}
+
+.ie-grabbing {
+  cursor: grabbing;
+}
+
+/* Transition utilities */
+.ie-transition {
+  transition: var(--ie-transition-normal);
+}
+
+.ie-transition-fast {
+  transition: var(--ie-transition-fast);
+}
+
+.ie-transition-slow {
+  transition: var(--ie-transition-slow);
+}

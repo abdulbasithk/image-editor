@@ -6,11 +6,26 @@ export class CanvasManager {
   private layers: Layer[] = [];
   private viewport: Viewport;
 
-  constructor(container: HTMLElement, width: number, height: number) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = width;
-    this.canvas.height = height;
-    container.appendChild(this.canvas);
+  constructor(
+    container: HTMLElement,
+    width: number,
+    height: number,
+    existingCanvas?: HTMLCanvasElement,
+  ) {
+    if (existingCanvas) {
+      this.canvas = existingCanvas;
+      this.canvas.width = width;
+      this.canvas.height = height;
+      // Ensure the canvas is in the container
+      if (!container.contains(this.canvas)) {
+        container.appendChild(this.canvas);
+      }
+    } else {
+      this.canvas = document.createElement('canvas');
+      this.canvas.width = width;
+      this.canvas.height = height;
+      container.appendChild(this.canvas);
+    }
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('2D context not supported');
     this.context = ctx;

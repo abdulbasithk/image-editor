@@ -7,18 +7,23 @@ import { CanvasManager } from './CanvasManager';
 import { InputManager } from './InputManager';
 import { PluginManager } from './PluginManager';
 import { HistoryManager } from './HistoryManager';
+import { ImageLoader, ImageLoadOptions, ImageLoadResult } from './ImageLoader';
+import { ContainerManager, ContainerConfig, ResizeEvent } from './ContainerManager';
 
 export class ImageEditor {
   private config: ImageEditorConfig;
   private canvasManager: CanvasManager;
+  private containerManager: ContainerManager;
   private eventEmitter: EventEmitter;
   private inputManager: InputManager;
   private pluginManager: PluginManager;
   private historyManager: HistoryManager;
+  private imageLoader: ImageLoader;
   private currentTool: Tool | null = null;
   private tools: Map<string, Tool> = new Map();
   private container: HTMLElement;
   private destroyed: boolean = false;
+  private dragDropEnabled: boolean = true;
 
   constructor(config: ImageEditorConfig) {
     this.config = { version: '1.0.0', ...config };
@@ -26,11 +31,55 @@ export class ImageEditor {
 
     // Initialize core components
     this.eventEmitter = new EventEmitter();
-    this.canvasManager = new CanvasManager(
+
+    // Create canvas for CanvasManager
+    const canvas = document.createElement('canvas');
+    canvas.width = config.width || 800;
+    canvas.height = config.height || 600;
+
+    // Initialize container manager with canvas
+    const containerConfig: ContainerConfig = {};
+    if (config.resizable !== undefined) containerConfig.resizable = config.resizable;
+    if (config.showHeader !== undefined) containerConfig.showHeader = config.showHeader;
+    if (config.showToolbar !== undefined) containerConfig.showToolbar = config.showToolbar;
+    if (config.showPanel !== undefined) containerConfig.showPanel = config.showPanel;
+    if (config.title !== undefined) containerConfig.title = config.title;
+    if (config.theme !== undefined) containerConfig.theme = config.theme;
+    if (config.responsive !== undefined) containerConfig.responsive = config.responsive;
+
+    this.containerManager = new ContainerManager(
       this.container,
+      canvas,
+      containerConfig,
+      this.handleContainerResize.bind(this),
+    );
+
+    // Get the canvas from the container elements (it should have the proper class now)
+    const containerElements = this.containerManager.getElements();
+    const containerCanvas = containerElements.canvas;
+
+    // Set canvas dimensions
+    containerCanvas.width = config.width || 800;
+    containerCanvas.height = config.height || 600;
+
+    // Initialize canvas manager with the canvas from container
+    this.canvasManager = new CanvasManager(
+      containerElements.canvasContainer,
       config.width || 800,
       config.height || 600,
-    ); // Initialize plugin manager
+      containerCanvas,
+    );
+
+    // Initialize image loader with configuration
+    const imageLoadOptions: ImageLoadOptions = {
+      maxWidth: config.maxImageWidth,
+      maxHeight: config.maxImageHeight,
+      quality: config.imageQuality || 0.9,
+      enableProgress: config.enableLoadingProgress !== false,
+    };
+    this.imageLoader = new ImageLoader(imageLoadOptions);
+
+    // Initialize plugin manager
     this.pluginManager = new PluginManager(this);
 
     // Initialize history manager
@@ -41,6 +90,17 @@ export class ImageEditor {
 
     // Setup event delegation for tool interactions
     this.setupEventDelegation();
+
+    // Setup image loader events
+    this.setupImageLoaderEvents();
+
+    // Setup drag and drop if enabled
+    if (config.enableDragDrop !== false) {
+      this.setupDragAndDrop();
+    }
+
+    // Load CSS styles
+    this.loadStyles();
 
     // Emit ready event
     this.eventEmitter.emit('editor:ready', { editor: this });
@@ -147,25 +207,34 @@ export class ImageEditor {
     }
   }
   // Core methods
-  public async loadImage(source: string | File | ImageData): Promise<void> {
-    // TODO: Implement image loading
-    if (typeof source === 'string') {
-      const img = new Image();
-      return new Promise((resolve, reject) => {
-        img.onload = () => {
-          this.canvasManager.drawImage(img, 0, 0);
-          this.eventEmitter.emit('image:loaded', {
-            width: img.width,
-            height: img.height,
-            source: source as string,
-          });
-          resolve();
-        };
-        img.onerror = reject;
-        img.src = source;
+  public async loadImage(source: string | File | Blob | ArrayBuffer | ImageData): Promise<void> {
+    try {
+      this.eventEmitter.emit('image:loading', { source });
+
+      const result: ImageLoadResult = await this.imageLoader.loadImage(source);
+
+      // Resize canvas to fit the image if needed
+      const canvas = this.canvasManager.getCanvas();
+      if (canvas.width !== result.displayWidth || canvas.height !== result.displayHeight) {
+        this.canvasManager.resize(result.displayWidth, result.displayHeight);
+      }
+
+      // Draw the image on the canvas
+      this.canvasManager.drawImage(result.image, 0, 0);
+
+      this.eventEmitter.emit('image:loaded', {
+        width: result.originalWidth,
+        height: result.originalHeight,
+        displayWidth: result.displayWidth,
+        displayHeight: result.displayHeight,
+        format: result.format,
+        size: result.size,
+        source,
       });
+    } catch (error) {
+      this.eventEmitter.emit('image:error', { error, source });
+      throw error;
     }
-    // TODO: Handle File and ImageData sources
   }
 
   public async exportImage(format: string, quality?: number): Promise<Blob> {
@@ -190,6 +259,9 @@ export class ImageEditor {
 
     // Clean up event listeners
     this.inputManager.destroy();
+
+    // Clean up container manager
+    this.containerManager.destroy();
 
     // Clear history
     this.historyManager.clear();
@@ -352,5 +424,270 @@ export class ImageEditor {
   // Lifecycle methods
   public isDestroyed(): boolean {
     return this.destroyed;
+  }
+
+  /**
+   * Setup image loader event handlers
+   */
+  private setupImageLoaderEvents(): void {
+    this.imageLoader.on('load:start', (data: any) => {
+      this.eventEmitter.emit('image:loading', data);
+    });
+
+    this.imageLoader.on('load:progress', (data: any) => {
+      this.eventEmitter.emit('image:progress', data);
+    });
+
+    this.imageLoader.on('load:complete', (data: any) => {
+      this.eventEmitter.emit('image:loadComplete', data);
+    });
+
+    this.imageLoader.on('load:error', (data: any) => {
+      this.eventEmitter.emit('image:error', data);
+    });
+  }
+
+  /**
+   * Setup drag and drop functionality
+   */
+  private setupDragAndDrop(): void {
+    const canvas = this.canvasManager.getCanvas();
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+      canvas.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    // Handle drag enter and over
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      canvas.addEventListener(eventName, () => {
+        canvas.classList.add('drag-over');
+        this.eventEmitter.emit('dragdrop:enter', {});
+      });
+    });
+
+    // Handle drag leave
+    canvas.addEventListener('dragleave', (e) => {
+      // Only remove drag styling if we're actually leaving the canvas
+      if (!canvas.contains(e.relatedTarget as Node)) {
+        canvas.classList.remove('drag-over');
+        this.eventEmitter.emit('dragdrop:leave', {});
+      }
+    });
+
+    // Handle drop
+    canvas.addEventListener('drop', async (e) => {
+      canvas.classList.remove('drag-over');
+
+      const files = Array.from(e.dataTransfer?.files || []);
+
+      if (files.length === 0) {
+        this.eventEmitter.emit('dragdrop:error', { error: 'No files dropped' });
+        return;
+      }
+
+      // Only handle the first file for now
+      const file = files[0];
+
+      if (!file || !file.type.startsWith('image/')) {
+        this.eventEmitter.emit('dragdrop:error', {
+          error: 'Dropped file is not an image',
+          file,
+        });
+        return;
+      }
+
+      try {
+        this.eventEmitter.emit('dragdrop:drop', { file });
+        await this.loadImage(file);
+        this.eventEmitter.emit('dragdrop:success', { file });
+      } catch (error) {
+        this.eventEmitter.emit('dragdrop:error', { error, file });
+      }
+    });
+  }
+
+  /**
+   * Enable or disable drag and drop
+   */
+  public setDragDropEnabled(enabled: boolean): void {
+    this.dragDropEnabled = enabled;
+    const canvas = this.canvasManager.getCanvas();
+
+    if (enabled) {
+      this.setupDragAndDrop();
+    } else {
+      // Remove drag-related event listeners by cloning the canvas
+      const newCanvas = canvas.cloneNode(true) as HTMLCanvasElement;
+      canvas.parentNode?.replaceChild(newCanvas, canvas);
+      // Update canvas reference in CanvasManager
+      (this.canvasManager as any).canvas = newCanvas;
+    }
+  }
+
+  /**
+   * Get image loader instance
+   */
+  public getImageLoader(): ImageLoader {
+    return this.imageLoader;
+  }
+
+  /**
+   * Validate an image file before loading
+   */
+  public async validateImage(file: File | Blob): Promise<{ isValid: boolean; error?: string }> {
+    const result = await this.imageLoader.validateImage(file);
+    return {
+      isValid: result.isValid,
+      error: result.error,
+    };
+  }
+
+  /**
+   * Handle container resize events
+   */
+  private handleContainerResize(event: ResizeEvent): void {
+    // Emit container resize event
+    this.eventEmitter.emit('container:resize', {
+      width: event.width,
+      height: event.height,
+      type: event.type,
+    });
+
+    // Update canvas if needed
+    if (event.type === 'manual') {
+      // For manual resize, we might want to adjust canvas size
+      // This is optional based on the desired behavior
+    }
+  }
+
+  /**
+   * Load CSS styles for the editor
+   */
+  private loadStyles(): void {
+    // Check if styles are already loaded
+    if (document.querySelector('#image-editor-styles')) {
+      return;
+    }
+
+    // Create and inject CSS
+    const style = document.createElement('style');
+    style.id = 'image-editor-styles';
+
+    // Import the CSS content - in a real implementation, this would be bundled
+    // For now, we'll add a minimal inline style to ensure the component works
+    style.textContent = `
+      .image-editor {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+        min-width: 600px;
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 14px;
+        color: #212529;
+        box-sizing: border-box;
+      }
+      .image-editor *, .image-editor *::before, .image-editor *::after {
+        box-sizing: border-box;
+      }
+      .image-editor-content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      .image-editor-canvas-area {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        position: relative;
+        background: #f8f9fa;
+      }
+      .image-editor-canvas-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .image-editor-canvas {
+        border: 1px solid #dee2e6;
+        background: #ffffff;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  // Container methods
+  /**
+   * Get container elements
+   */
+  public getContainerElements() {
+    return this.containerManager.getElements();
+  }
+
+  /**
+   * Set container size
+   */
+  public setSize(width: number, height: number): void {
+    this.containerManager.setSize(width, height);
+  }
+
+  /**
+   * Get container size
+   */
+  public getSize(): { width: number; height: number } {
+    return this.containerManager.getSize();
+  }
+
+  /**
+   * Toggle properties panel
+   */
+  public togglePanel(visible?: boolean): void {
+    this.containerManager.togglePanel(visible);
+  }
+
+  /**
+   * Set loading state
+   */
+  public setLoading(loading: boolean): void {
+    this.containerManager.setLoading(loading);
+  }
+
+  /**
+   * Set editor title
+   */
+  public setTitle(title: string): void {
+    this.containerManager.setTitle(title);
+  }
+
+  /**
+   * Set theme
+   */
+  public setTheme(theme: 'light' | 'dark' | 'auto'): void {
+    this.containerManager.setTheme(theme);
+    this.eventEmitter.emit('container:themeChange', {
+      theme: theme === 'auto' ? 'light' : theme, // Simplified for now
+    });
+  }
+
+  /**
+   * Get the canvas element
+   */
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvasManager.getCanvas();
   }
 }
