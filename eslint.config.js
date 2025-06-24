@@ -27,23 +27,25 @@ module.exports = [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
-
-        // Browser globals
         window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
         location: 'readonly',
-
-        // DOM types
         HTMLElement: 'readonly',
         HTMLCanvasElement: 'readonly',
         HTMLImageElement: 'readonly',
+        HTMLInputElement: 'readonly',
         CanvasRenderingContext2D: 'readonly',
         ImageData: 'readonly',
         Image: 'readonly',
         Blob: 'readonly',
         File: 'readonly',
+        FileList: 'readonly',
+        FileReader: 'readonly',
+        DataTransfer: 'readonly',
         DOMRect: 'readonly',
+        Node: 'readonly',
+        URL: 'readonly',
 
         // Event types
         MouseEvent: 'readonly',
@@ -57,6 +59,9 @@ module.exports = [
         // Canvas types
         CanvasTextAlign: 'readonly',
         CanvasTextBaseline: 'readonly',
+
+        ResizeObserver: 'readonly',
+        getComputedStyle: 'readonly',
       },
     },
     plugins: {

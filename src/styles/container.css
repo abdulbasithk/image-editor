@@ -1,0 +1,368 @@
+/* ImageEditor Container Styles */
+:root {
+  /* Color Theme */
+  --ie-bg-primary: #ffffff;
+  --ie-bg-secondary: #f8f9fa;
+  --ie-bg-tertiary: #e9ecef;
+  --ie-border-color: #dee2e6;
+  --ie-border-color-focus: #4caf50;
+  --ie-text-primary: #212529;
+  --ie-text-secondary: #6c757d;
+  --ie-text-muted: #adb5bd;
+
+  /* Spacing */
+  --ie-spacing-xs: 4px;
+  --ie-spacing-sm: 8px;
+  --ie-spacing-md: 16px;
+  --ie-spacing-lg: 24px;
+  --ie-spacing-xl: 32px;
+
+  /* Sizes */
+  --ie-border-radius: 6px;
+  --ie-border-radius-sm: 4px;
+  --ie-border-radius-lg: 8px;
+  --ie-border-width: 1px;
+  --ie-border-width-thick: 2px;
+
+  /* Shadows */
+  --ie-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --ie-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --ie-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --ie-transition-fast: 0.15s ease;
+  --ie-transition-normal: 0.3s ease;
+  --ie-transition-slow: 0.5s ease;
+
+  /* Z-indexes */
+  --ie-z-toolbar: 10;
+  --ie-z-panel: 20;
+  --ie-z-modal: 30;
+  --ie-z-tooltip: 40;
+}
+
+/* Dark theme variables */
+[data-theme='dark'] {
+  --ie-bg-primary: #1a1a1a;
+  --ie-bg-secondary: #2d2d2d;
+  --ie-bg-tertiary: #404040;
+  --ie-border-color: #404040;
+  --ie-border-color-focus: #66bb6a;
+  --ie-text-primary: #ffffff;
+  --ie-text-secondary: #b0b0b0;
+  --ie-text-muted: #808080;
+}
+
+/* Main container */
+.image-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  min-width: 600px;
+  background: var(--ie-bg-primary);
+  border: var(--ie-border-width) solid var(--ie-border-color);
+  border-radius: var(--ie-border-radius);
+  box-shadow: var(--ie-shadow-md);
+  overflow: hidden;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ie-text-primary);
+  box-sizing: border-box;
+}
+
+.image-editor *,
+.image-editor *::before,
+.image-editor *::after {
+  box-sizing: border-box;
+}
+
+/* Container states */
+.image-editor.resizing {
+  user-select: none;
+  pointer-events: none;
+}
+
+.image-editor.resizing * {
+  pointer-events: none;
+}
+
+/* Responsive behavior */
+.image-editor.mobile {
+  min-width: 320px;
+  min-height: 300px;
+}
+
+.image-editor.tablet {
+  min-width: 480px;
+  min-height: 350px;
+}
+
+/* Header section */
+.image-editor-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ie-spacing-sm) var(--ie-spacing-md);
+  background: var(--ie-bg-secondary);
+  border-bottom: var(--ie-border-width) solid var(--ie-border-color);
+  min-height: 48px;
+}
+
+.image-editor-title {
+  font-weight: 600;
+  color: var(--ie-text-primary);
+  margin: 0;
+  font-size: 16px;
+}
+
+.image-editor-actions {
+  display: flex;
+  gap: var(--ie-spacing-sm);
+}
+
+/* Main content area */
+.image-editor-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Toolbar section */
+.image-editor-toolbar {
+  display: flex;
+  flex-direction: column;
+  width: 60px;
+  background: var(--ie-bg-secondary);
+  border-right: var(--ie-border-width) solid var(--ie-border-color);
+  flex-shrink: 0;
+  z-index: var(--ie-z-toolbar);
+}
+
+/* Canvas area */
+.image-editor-canvas-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  background: var(--ie-bg-tertiary);
+}
+
+.image-editor-canvas-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-editor-canvas {
+  border: var(--ie-border-width) solid var(--ie-border-color);
+  background: #ffffff;
+  box-shadow: var(--ie-shadow-sm);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Properties panel */
+.image-editor-panel {
+  width: 280px;
+  background: var(--ie-bg-secondary);
+  border-left: var(--ie-border-width) solid var(--ie-border-color);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--ie-z-panel);
+}
+
+.image-editor-panel.collapsed {
+  width: 0;
+  border: none;
+  overflow: hidden;
+}
+
+/* Resize handles */
+.image-editor-resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 1000;
+}
+
+.image-editor-resize-handle:hover {
+  background: var(--ie-border-color-focus);
+  opacity: 0.3;
+}
+
+/* Horizontal resize handles */
+.image-editor-resize-handle.resize-top,
+.image-editor-resize-handle.resize-bottom {
+  left: 0;
+  right: 0;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.image-editor-resize-handle.resize-top {
+  top: -2px;
+}
+
+.image-editor-resize-handle.resize-bottom {
+  bottom: -2px;
+}
+
+/* Vertical resize handles */
+.image-editor-resize-handle.resize-left,
+.image-editor-resize-handle.resize-right {
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.image-editor-resize-handle.resize-left {
+  left: -2px;
+}
+
+.image-editor-resize-handle.resize-right {
+  right: -2px;
+}
+
+/* Corner resize handles */
+.image-editor-resize-handle.resize-corner {
+  width: 8px;
+  height: 8px;
+}
+
+.image-editor-resize-handle.resize-nw {
+  top: -4px;
+  left: -4px;
+  cursor: nw-resize;
+}
+
+.image-editor-resize-handle.resize-ne {
+  top: -4px;
+  right: -4px;
+  cursor: ne-resize;
+}
+
+.image-editor-resize-handle.resize-sw {
+  bottom: -4px;
+  left: -4px;
+  cursor: sw-resize;
+}
+
+.image-editor-resize-handle.resize-se {
+  bottom: -4px;
+  right: -4px;
+  cursor: se-resize;
+}
+
+/* Loading states */
+.image-editor.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.image-editor.loading::before {
+  content: 'Loading...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  font-weight: 600;
+  color: var(--ie-text-primary);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .image-editor {
+    min-width: 320px;
+    flex-direction: column;
+  }
+
+  .image-editor-content {
+    flex-direction: column;
+  }
+
+  .image-editor-toolbar {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    border-right: none;
+    border-bottom: var(--ie-border-width) solid var(--ie-border-color);
+  }
+
+  .image-editor-panel {
+    width: 100%;
+    height: 200px;
+    border-left: none;
+    border-top: var(--ie-border-width) solid var(--ie-border-color);
+  }
+
+  .image-editor-panel.collapsed {
+    height: 0;
+    border: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-editor {
+    border-radius: 0;
+    border: none;
+    min-height: 100vh;
+  }
+
+  .image-editor-header {
+    padding: var(--ie-spacing-xs) var(--ie-spacing-sm);
+    min-height: 44px;
+  }
+
+  .image-editor-title {
+    font-size: 14px;
+  }
+}
+
+/* Focus and accessibility */
+.image-editor:focus-within {
+  outline: 2px solid var(--ie-border-color-focus);
+  outline-offset: -2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .image-editor {
+    border-width: var(--ie-border-width-thick);
+  }
+
+  .image-editor-header,
+  .image-editor-toolbar,
+  .image-editor-panel {
+    border-width: var(--ie-border-width-thick);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .image-editor,
+  .image-editor * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -2,10 +2,23 @@ export interface ImageEditorConfig {
   container: string | HTMLElement;
   width?: number;
   height?: number;
-  theme?: 'light' | 'dark';
+  theme?: 'light' | 'dark' | 'auto';
   tools?: string[];
   plugins?: any[];
   version?: string;
+  // Image loading options
+  maxImageWidth?: number;
+  maxImageHeight?: number;
+  imageQuality?: number;
+  enableLoadingProgress?: boolean;
+  enableDragDrop?: boolean;
+  // Container options
+  resizable?: boolean;
+  showHeader?: boolean;
+  showToolbar?: boolean;
+  showPanel?: boolean;
+  title?: string;
+  responsive?: boolean;
 }
 
 export interface Point {
@@ -47,8 +60,27 @@ export interface EditorEventMap {
   // Editor events
   'editor:ready': { editor: any };
   'editor:destroy': {};
-  'image:loaded': { width: number; height: number; source: string };
+  'image:loaded': {
+    width: number;
+    height: number;
+    displayWidth: number;
+    displayHeight: number;
+    format: string;
+    size: number;
+    source: any;
+  };
   'image:exported': { format: string; blob: Blob };
+  'image:loading': { source: any };
+  'image:progress': { loaded: number; total: number; percentage: number };
+  'image:loadComplete': { result: any };
+  'image:error': { error: any; source?: any };
+
+  // Drag and drop events
+  'dragdrop:enter': {};
+  'dragdrop:leave': {};
+  'dragdrop:drop': { file: File };
+  'dragdrop:success': { file: File };
+  'dragdrop:error': { error: any; file?: File };
 
   // Tool events
   'tool:selected': { toolName: string; previousTool?: string };
@@ -65,6 +97,10 @@ export interface EditorEventMap {
   };
   'history:action': { type: 'undo' | 'redo'; action: any };
   'history:clear': {};
+
+  // Container events
+  'container:resize': { width: number; height: number; type: 'manual' | 'responsive' };
+  'container:themeChange': { theme: 'light' | 'dark' };
 }
 
 export type EditorEventKey = keyof EditorEventMap;
