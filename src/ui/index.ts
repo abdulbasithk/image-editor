@@ -24,3 +24,4 @@ export {
   verticalToolbarConfig,
   ToolbarIcons,
 } from './ToolbarConfig';
+export { createResizeControls } from './ResizeControls';

@@ -9,6 +9,7 @@ import { PluginManager } from './PluginManager';
 import { HistoryManager } from './HistoryManager';
 import { ImageLoader, ImageLoadOptions, ImageLoadResult } from './ImageLoader';
 import { ContainerManager, ContainerConfig, ResizeEvent } from './ContainerManager';
+import { ResizeTool } from '../tools/ResizeTool';
 
 export class ImageEditor {
   private config: ImageEditorConfig;
@@ -87,6 +88,9 @@ export class ImageEditor {
 
     // Initialize input manager
     this.inputManager = new InputManager(this.canvasManager.getCanvas(), this.eventEmitter);
+
+    // Register built-in tools
+    this.tools.set('resize', new ResizeTool(this, this.canvasManager));
 
     // Setup event delegation for tool interactions
     this.setupEventDelegation();
@@ -305,6 +309,10 @@ export class ImageEditor {
       this.currentTool = null;
     }
     this.tools.delete(toolName);
+  }
+
+  public getTool(name: string): Tool | undefined {
+    return this.tools.get(name);
   }
 
   // Event methods with proper typing

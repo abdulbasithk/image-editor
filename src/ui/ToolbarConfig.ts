@@ -58,15 +58,15 @@ export const defaultToolbarConfig: ToolbarConfig = {
           id: 'crop',
           name: 'Crop',
           icon: ToolbarIcons.crop,
-          tooltip: 'Crop image',
+          tooltip: 'Crop tool',
           shortcut: 'C',
         },
         {
           id: 'resize',
           name: 'Resize',
           icon: ToolbarIcons.resize,
-          tooltip: 'Resize image',
-          shortcut: 'Shift+R',
+          tooltip: 'Resize tool',
+          shortcut: 'R',
         },
         {
           id: 'rotate',

@@ -48,6 +48,7 @@ export { DrawCommand, ClearCanvasCommand, TextCommand } from './commands/BasicCo
 
 // Tools
 export { CropTool } from './tools/CropTool';
+export { ResizeTool } from './tools/ResizeTool';
 
 // Plugins
 export { LoggerPlugin } from './plugins/LoggerPlugin';
@@ -58,6 +59,7 @@ export type { ToolbarTool, ToolbarGroup, ToolbarConfig, ToolbarEvents } from './
 export { CanvasArea } from './ui/CanvasArea';
 export type { ZoomLevel, CanvasAreaConfig, CanvasAreaEvents } from './ui/CanvasArea';
 export { PropertiesPanel } from './ui/PropertiesPanel';
+export { createResizeControls } from './ui/ResizeControls';
 export type {
   PropertyControl,
   PropertyGroup,

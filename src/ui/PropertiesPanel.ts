@@ -4,6 +4,7 @@
  */
 
 import { EventEmitter } from '../core/EventEmitter';
+import { ResizeTool } from '../tools/ResizeTool';
 
 export interface PropertyControl {
   id: string;
@@ -928,4 +929,56 @@ export class PropertiesPanel extends EventEmitter {
     this.panelElement.remove();
     this.removeAllListeners();
   }
+}
+
+// Add this function to dynamically generate properties for ResizeTool
+export function getResizeToolProperties(tool: ResizeTool): ToolProperties {
+  const options = tool.getOptions();
+  return {
+    toolId: 'resize',
+    toolName: 'Resize',
+    groups: [
+      {
+        id: 'resize-dimensions',
+        title: 'Dimensions',
+        controls: [
+          { id: 'width', type: 'input', label: 'Width', value: options.width },
+          { id: 'height', type: 'input', label: 'Height', value: options.height },
+          {
+            id: 'lockAspectRatio',
+            type: 'checkbox',
+            label: 'Lock Aspect Ratio',
+            value: options.lockAspectRatio,
+          },
+          {
+            id: 'unit',
+            type: 'dropdown',
+            label: 'Unit',
+            value: options.unit,
+            options: [
+              { value: 'px', label: 'Pixels' },
+              { value: '%', label: 'Percent' },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'resize-algorithm',
+        title: 'Resampling',
+        controls: [
+          {
+            id: 'algorithm',
+            type: 'dropdown',
+            label: 'Algorithm',
+            value: options.algorithm,
+            options: [
+              { value: 'nearest', label: 'Nearest Neighbor' },
+              { value: 'bilinear', label: 'Bilinear' },
+              { value: 'bicubic', label: 'Bicubic' },
+            ],
+          },
+        ],
+      },
+    ],
+  };
 }

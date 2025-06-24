@@ -245,3 +245,79 @@
     transform: none;
   }
 }
+
+/* --- DEMO TOOLBAR PANEL FIX --- */
+.ie-toolbar-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+  min-width: 56px;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  padding: 12px 0;
+  gap: 8px;
+  z-index: 10;
+}
+.ie-toolbar-panel button,
+.ie-toolbar-panel .toolbar-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 18px;
+  padding: 0;
+}
+.ie-toolbar-panel button svg,
+.ie-toolbar-panel .toolbar-tool svg {
+  width: 28px;
+  height: 28px;
+  fill: #333;
+}
+.ie-toolbar-panel button.selected,
+.ie-toolbar-panel .toolbar-tool.selected {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+}
+@media (max-width: 900px) {
+  .ie-toolbar-panel {
+    width: 48px;
+    min-width: 40px;
+    gap: 4px;
+  }
+  .ie-toolbar-panel button,
+  .ie-toolbar-panel .toolbar-tool {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+  .ie-toolbar-panel button svg,
+  .ie-toolbar-panel .toolbar-tool svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .ie-toolbar-panel {
+    flex-direction: row;
+    width: 100vw;
+    height: 56px;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 4px;
+    gap: 4px;
+  }
+  .ie-toolbar-panel button,
+  .ie-toolbar-panel .toolbar-tool {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+  }
+}

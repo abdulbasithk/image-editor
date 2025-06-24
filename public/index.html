@@ -10,6 +10,7 @@
         height: 100%;
         margin: 0;
         font-family: Arial, sans-serif;
+        background: #f8f9fa;
       }
       #app {
         min-height: 100vh;
@@ -17,11 +18,132 @@
         display: flex;
         flex-direction: column;
         background: #f8f9fa;
+        overflow: hidden;
+      }
+      .ie-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        height: 64px;
+        background: #fff;
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        z-index: 100;
+      }
+      .ie-header-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #007acc;
+        letter-spacing: 1px;
+      }
+      .ie-header-actions {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+      .ie-main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .ie-toolbar-panel {
+        width: 72px;
+        min-width: 56px;
+        background: #fff;
+        border-right: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 0;
+        z-index: 10;
+      }
+      .ie-canvas-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f4f6fb;
+        position: relative;
+        min-width: 0;
+        min-height: 0;
         overflow: auto;
+      }
+      .ie-properties-panel {
+        width: 340px;
+        min-width: 240px;
+        background: #fff;
+        border-left: 1px solid #e0e0e0;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+      }
+      .ie-status-bar {
+        height: 32px;
+        background: #f1f3f4;
+        color: #333;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        border-top: 1px solid #e0e0e0;
+        letter-spacing: 0.5px;
+      }
+      @media (max-width: 900px) {
+        .ie-properties-panel {
+          display: none;
+        }
+        .ie-toolbar-panel {
+          width: 48px;
+          min-width: 40px;
+        }
+      }
+      @media (max-width: 600px) {
+        .ie-header {
+          flex-direction: column;
+          height: auto;
+          padding: 0 12px;
+        }
+        .ie-header-title {
+          font-size: 1.1rem;
+        }
+        .ie-main {
+          flex-direction: column;
+        }
+        .ie-toolbar-panel {
+          flex-direction: row;
+          width: 100vw;
+          height: 56px;
+          border-right: none;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .ie-canvas-panel {
+          flex: 1;
+        }
       }
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="ie-header">
+        <span class="ie-header-title">ImageEditor Demo</span>
+        <div class="ie-header-actions">
+          <button id="theme-toggle" title="Toggle theme">🌗</button>
+          <button id="open-image" title="Open image">Open</button>
+          <button id="save-image" title="Save image">Save</button>
+          <button id="export-image" title="Export image">Export</button>
+        </div>
+      </div>
+      <div class="ie-main">
+        <div class="ie-toolbar-panel" id="toolbar-panel"></div>
+        <div class="ie-canvas-panel" id="canvas-panel"></div>
+        <div class="ie-properties-panel" id="properties-panel"></div>
+      </div>
+      <div class="ie-status-bar" id="status-bar">Ready</div>
+    </div>
   </body>
 </html>
