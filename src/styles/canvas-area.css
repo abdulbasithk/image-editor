@@ -1,0 +1,375 @@
+/**
+ * Canvas Area styles for ImageEditor
+ * Provides styling for zoomable canvas viewport with zoom controls and minimap
+ */
+
+.image-editor-canvas-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--bg-secondary, #f8f9fa);
+  overflow: hidden;
+}
+
+/* Canvas Viewport */
+.canvas-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0px;
+}
+
+.canvas-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.main-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  cursor: default;
+  user-select: none;
+  background: white;
+}
+
+.main-canvas:focus {
+  outline: 2px solid var(--primary-color, #007bff);
+  outline-offset: 2px;
+}
+
+/* Canvas Controls */
+.canvas-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-primary, white);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.zoom-controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary, #212529);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zoom-controls button:hover {
+  background: var(--bg-hover, #f8f9fa);
+  color: var(--primary-color, #007bff);
+}
+
+.zoom-controls button:active {
+  transform: scale(0.95);
+}
+
+.zoom-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-controls button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Zoom Slider */
+.zoom-slider-container {
+  display: flex;
+  align-items: center;
+  margin: 0 4px;
+}
+
+.zoom-slider {
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-secondary, #e9ecef);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color, #007bff);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color, #007bff);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Zoom Info */
+.zoom-info {
+  display: flex;
+  align-items: center;
+}
+
+.zoom-select {
+  min-width: 70px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  background: var(--bg-primary, white);
+  color: var(--text-primary, #212529);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.zoom-select:focus {
+  border-color: var(--primary-color, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Minimap */
+.minimap {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 150px;
+  height: 150px;
+  background: var(--bg-primary, white);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.minimap-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 2px solid var(--primary-color, #007bff);
+  background: rgba(0, 123, 255, 0.2);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .canvas-controls {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+  }
+
+  .zoom-controls {
+    width: 100%;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 20px;
+  }
+
+  .zoom-slider-container {
+    flex: 1;
+    margin: 0 8px;
+  }
+
+  .zoom-slider {
+    width: 100%;
+  }
+
+  .minimap {
+    width: 120px;
+    height: 120px;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .canvas-controls {
+    position: static;
+    background: var(--bg-secondary, #f8f9fa);
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+  }
+
+  .zoom-controls {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px;
+    background: transparent;
+    border: none;
+  }
+
+  .zoom-controls button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .zoom-controls button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .minimap {
+    display: none;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .zoom-controls button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .zoom-slider {
+    height: 6px;
+  }
+
+  .zoom-slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  .zoom-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .image-editor-canvas-area {
+    background: var(--bg-secondary-dark, #2d3748);
+  }
+
+  .canvas-viewport {
+    background:
+      linear-gradient(45deg, #4a5568 25%, transparent 25%),
+      linear-gradient(-45deg, #4a5568 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #4a5568 75%),
+      linear-gradient(-45deg, transparent 75%, #4a5568 75%);
+    background-size: 20px 20px;
+    background-position:
+      0 0,
+      0 10px,
+      10px -10px,
+      -10px 0px;
+  }
+
+  .zoom-controls {
+    background: var(--bg-primary-dark, #1a202c);
+    border-color: var(--border-color-dark, #4a5568);
+  }
+
+  .zoom-controls button {
+    color: var(--text-primary-dark, #e2e8f0);
+  }
+
+  .zoom-controls button:hover {
+    background: var(--bg-hover-dark, #2d3748);
+  }
+
+  .zoom-slider {
+    background: var(--bg-secondary-dark, #4a5568);
+  }
+
+  .zoom-select {
+    background: var(--bg-primary-dark, #1a202c);
+    border-color: var(--border-color-dark, #4a5568);
+    color: var(--text-primary-dark, #e2e8f0);
+  }
+
+  .minimap {
+    background: var(--bg-primary-dark, #1a202c);
+    border-color: var(--border-color-dark, #4a5568);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .zoom-controls {
+    border-width: 2px;
+  }
+
+  .zoom-controls button:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+
+  .zoom-slider:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+
+  .zoom-select:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .zoom-controls button {
+    transition: none;
+  }
+
+  .zoom-controls button:active {
+    transform: none;
+  }
+}

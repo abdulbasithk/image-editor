@@ -54,7 +54,7 @@ describe('ImageEditor Container Integration', () => {
       });
 
       const elements = editor.getContainerElements();
-      expect(elements.container.className).toBe('image-editor');
+      expect(elements.container.classList.contains('image-editor')).toBe(true);
       expect(elements.header).toBeDefined();
       expect(elements.toolbar).toBeDefined();
       expect(elements.panel).toBeDefined();

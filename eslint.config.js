@@ -31,10 +31,14 @@ module.exports = [
         document: 'readonly',
         navigator: 'readonly',
         location: 'readonly',
+        localStorage: 'readonly',
         HTMLElement: 'readonly',
         HTMLCanvasElement: 'readonly',
         HTMLImageElement: 'readonly',
         HTMLInputElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLSelectElement: 'readonly',
+        MediaQueryListEvent: 'readonly',
         CanvasRenderingContext2D: 'readonly',
         ImageData: 'readonly',
         Image: 'readonly',
@@ -46,6 +50,7 @@ module.exports = [
         DOMRect: 'readonly',
         Node: 'readonly',
         URL: 'readonly',
+        MediaQueryList: 'readonly',
 
         // Event types
         MouseEvent: 'readonly',

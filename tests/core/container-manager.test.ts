@@ -51,7 +51,7 @@ describe('ContainerManager', () => {
     it('should create container manager with default config', () => {
       containerManager = new ContainerManager(container, canvas);
 
-      expect(container.className).toBe('image-editor');
+      expect(container.classList.contains('image-editor')).toBe(true);
       expect(container.children.length).toBeGreaterThan(0);
     });
 
@@ -153,30 +153,30 @@ describe('ContainerManager', () => {
     });
 
     it('should add mobile class for small widths', () => {
-      // Simulate ResizeObserver callback
-      const observerCallback = (global.ResizeObserver as jest.Mock).mock.calls[0][0];
-      observerCallback([
-        {
-          contentRect: { width: 500, height: 400 },
-        },
-      ]);
+      // Set container to small width
+      container.style.width = '500px';
 
-      expect(container.classList.contains('mobile')).toBe(true);
+      // Get access to the ResponsiveManager instance and trigger responsive class update
+      const responsiveManager = (containerManager as any).responsiveManager;
+      responsiveManager.applyResponsiveClasses();
+
+      expect(container.classList.contains('ie-mobile')).toBe(true);
     });
 
     it('should add tablet class for medium widths', () => {
-      const observerCallback = (global.ResizeObserver as jest.Mock).mock.calls[0][0];
-      observerCallback([
-        {
-          contentRect: { width: 800, height: 600 },
-        },
-      ]);
+      // Set container to tablet width
+      container.style.width = '800px';
 
-      expect(container.classList.contains('tablet')).toBe(true);
+      // Get access to the ResponsiveManager instance and trigger responsive class update
+      const responsiveManager = (containerManager as any).responsiveManager;
+      responsiveManager.applyResponsiveClasses();
+
+      expect(container.classList.contains('ie-tablet')).toBe(true);
     });
 
     it('should call resize callback when responsive resize occurs', () => {
-      const observerCallback = (global.ResizeObserver as jest.Mock).mock.calls[0][0];
+      // The ContainerManager creates a ResizeObserver (calls[1]) after ResponsiveManager creates one (calls[0])
+      const observerCallback = (global.ResizeObserver as jest.Mock).mock.calls[1][0];
       observerCallback([
         {
           contentRect: { width: 800, height: 600 },

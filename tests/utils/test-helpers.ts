@@ -184,6 +184,17 @@ export function createMockContainer(): HTMLElement {
   container.style.width = '800px';
   container.style.height = '600px';
 
+  // Mock clientWidth and clientHeight to match the style
+  Object.defineProperty(container, 'clientWidth', {
+    get: () => parseInt(container.style.width) || 800,
+    configurable: true,
+  });
+
+  Object.defineProperty(container, 'clientHeight', {
+    get: () => parseInt(container.style.height) || 600,
+    configurable: true,
+  });
+
   // Mock getBoundingClientRect that reflects current styles
   container.getBoundingClientRect = jest.fn().mockImplementation(() => {
     const width = parseInt(container.style.width) || 800;

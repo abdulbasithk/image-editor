@@ -1,0 +1,554 @@
+/**
+ * Responsive Layout Styles for ImageEditor
+ * Mobile-first approach with progressive enhancement
+ */
+
+/* ==================================================
+   RESPONSIVE BREAKPOINTS & VARIABLES
+   ================================================== */
+:root {
+  /* Responsive breakpoints */
+  --ie-breakpoint-xs: 320px; /* Small mobile */
+  --ie-breakpoint-sm: 480px; /* Mobile */
+  --ie-breakpoint-md: 768px; /* Tablet */
+  --ie-breakpoint-lg: 1024px; /* Desktop */
+  --ie-breakpoint-xl: 1440px; /* Large desktop */
+
+  /* Touch-friendly sizes */
+  --ie-touch-target-min: 44px;
+  --ie-touch-spacing: 8px;
+  --ie-mobile-padding: 12px;
+  --ie-tablet-padding: 16px;
+  --ie-desktop-padding: 20px;
+
+  /* Mobile-specific variables */
+  --ie-mobile-header-height: 56px;
+  --ie-mobile-toolbar-height: 60px;
+  --ie-mobile-panel-height: 280px;
+  --ie-mobile-bottom-safe: env(safe-area-inset-bottom, 0px);
+}
+
+/* ==================================================
+   BASE MOBILE-FIRST STYLES (320px+)
+   ================================================== */
+
+/* Container adjustments for mobile */
+.image-editor {
+  /* Mobile-first defaults */
+  min-width: var(--ie-breakpoint-xs);
+  border-radius: 0;
+  border: none;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Content area stacking for mobile */
+.image-editor-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+/* Mobile header */
+.image-editor-header {
+  height: var(--ie-mobile-header-height);
+  padding: var(--ie-spacing-sm) var(--ie-mobile-padding);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ie-border-color);
+  background: var(--ie-bg-primary);
+  z-index: var(--ie-z-toolbar);
+}
+
+/* Mobile toolbar - horizontal layout */
+.image-editor-toolbar {
+  width: 100%;
+  height: var(--ie-mobile-toolbar-height);
+  flex-direction: row;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--ie-border-color);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  background: var(--ie-bg-primary);
+  z-index: var(--ie-z-toolbar);
+}
+
+.image-editor-toolbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Canvas area - flexible center area */
+.image-editor-canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+/* Properties panel - bottom sheet on mobile */
+.image-editor-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--ie-mobile-panel-height);
+  background: var(--ie-bg-primary);
+  border-top: 1px solid var(--ie-border-color);
+  border-radius: 16px 16px 0 0;
+  z-index: var(--ie-z-panel);
+  transform: translateY(calc(100% - 60px)); /* Show header by default */
+  transition: transform var(--ie-transition-normal);
+  padding-bottom: var(--ie-mobile-bottom-safe);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.image-editor-panel.expanded {
+  transform: translateY(0);
+}
+
+.image-editor-panel.collapsed {
+  transform: translateY(calc(100% - 60px));
+}
+
+/* Touch-friendly button sizes */
+.image-editor button,
+.image-editor .button,
+.image-editor .tool-button {
+  min-height: var(--ie-touch-target-min);
+  min-width: var(--ie-touch-target-min);
+  padding: var(--ie-touch-spacing);
+  margin: 2px;
+  border-radius: var(--ie-border-radius);
+  touch-action: manipulation;
+}
+
+/* Touch-friendly form controls */
+.image-editor input,
+.image-editor select,
+.image-editor textarea {
+  min-height: var(--ie-touch-target-min);
+  padding: var(--ie-touch-spacing) var(--ie-mobile-padding);
+  font-size: 16px; /* Prevent zoom on iOS */
+  border-radius: var(--ie-border-radius);
+}
+
+/* Mobile-specific spacing */
+.image-editor .spacing-sm {
+  gap: var(--ie-spacing-sm);
+}
+
+.image-editor .spacing-md {
+  gap: var(--ie-mobile-padding);
+}
+
+/* ==================================================
+   SMALL MOBILE (480px+)
+   ================================================== */
+@media (min-width: 480px) {
+  .image-editor {
+    border-radius: var(--ie-border-radius);
+    border: 1px solid var(--ie-border-color);
+    height: auto;
+    min-height: 500px;
+    max-height: calc(100vh - 40px);
+    margin: 20px auto;
+    max-width: 95vw;
+  }
+
+  .image-editor-header {
+    height: auto;
+    min-height: 48px;
+    padding: var(--ie-spacing-md);
+  }
+
+  .image-editor-panel {
+    position: static;
+    height: auto;
+    min-height: 200px;
+    max-height: 300px;
+    transform: none;
+    border-radius: 0;
+    border-top: 1px solid var(--ie-border-color);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: none;
+    padding-bottom: 0;
+  }
+
+  .image-editor-panel.collapsed {
+    max-height: 48px;
+    overflow: hidden;
+  }
+
+  .image-editor-panel.expanded {
+    max-height: 400px;
+  }
+}
+
+/* ==================================================
+   TABLET (768px+)
+   ================================================== */
+@media (min-width: 768px) {
+  .image-editor {
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    margin: 0;
+    border-radius: var(--ie-border-radius);
+  }
+
+  /* Switch to side-by-side layout */
+  .image-editor-content {
+    flex-direction: row;
+  }
+
+  /* Vertical toolbar for tablet */
+  .image-editor-toolbar {
+    width: 80px;
+    height: 100%;
+    flex-direction: column;
+    border-right: 1px solid var(--ie-border-color);
+    border-bottom: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--ie-tablet-padding) var(--ie-spacing-sm);
+  }
+
+  /* Canvas takes center space */
+  .image-editor-canvas-area {
+    flex: 1;
+    min-height: 400px;
+  }
+
+  /* Properties panel on the right */
+  .image-editor-panel {
+    position: static;
+    width: 320px;
+    height: 100%;
+    max-height: none;
+    border-left: 1px solid var(--ie-border-color);
+    border-top: none;
+    border-radius: 0;
+    transform: none;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .image-editor-panel.collapsed {
+    width: 48px;
+    overflow: hidden;
+  }
+
+  .image-editor-panel.expanded {
+    width: 320px;
+  }
+
+  /* Tablet-specific button sizes */
+  .image-editor button,
+  .image-editor .button,
+  .image-editor .tool-button {
+    min-height: 40px;
+    min-width: 40px;
+    margin: 4px 2px;
+  }
+
+  /* Tablet form controls */
+  .image-editor input,
+  .image-editor select,
+  .image-editor textarea {
+    font-size: 14px;
+    padding: var(--ie-spacing-sm) var(--ie-tablet-padding);
+  }
+}
+
+/* ==================================================
+   DESKTOP (1024px+)
+   ================================================== */
+@media (min-width: 1024px) {
+  .image-editor {
+    min-height: 700px;
+    border-radius: var(--ie-border-radius-lg);
+    box-shadow: var(--ie-shadow-lg);
+  }
+
+  /* Wider toolbar for desktop */
+  .image-editor-toolbar {
+    width: 100px;
+    padding: var(--ie-desktop-padding) var(--ie-spacing-md);
+  }
+
+  /* Wider properties panel */
+  .image-editor-panel {
+    width: 360px;
+  }
+
+  .image-editor-panel.collapsed {
+    width: 48px;
+  }
+
+  .image-editor-panel.expanded {
+    width: 360px;
+  }
+
+  /* Desktop button sizes */
+  .image-editor button,
+  .image-editor .button,
+  .image-editor .tool-button {
+    min-height: 36px;
+    min-width: 36px;
+    margin: 3px;
+  }
+
+  /* Desktop form controls */
+  .image-editor input,
+  .image-editor select,
+  .image-editor textarea {
+    padding: var(--ie-spacing-sm) var(--ie-desktop-padding);
+  }
+
+  /* Desktop-specific hover effects */
+  .image-editor button:hover,
+  .image-editor .button:hover,
+  .image-editor .tool-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ie-shadow-sm);
+  }
+}
+
+/* ==================================================
+   LARGE DESKTOP (1440px+)
+   ================================================== */
+@media (min-width: 1440px) {
+  .image-editor {
+    min-height: 800px;
+  }
+
+  /* Even wider panels for large screens */
+  .image-editor-toolbar {
+    width: 120px;
+  }
+
+  .image-editor-panel {
+    width: 400px;
+  }
+
+  .image-editor-panel.expanded {
+    width: 400px;
+  }
+}
+
+/* ==================================================
+   ORIENTATION HANDLING
+   ================================================== */
+@media (orientation: landscape) and (max-width: 768px) {
+  /* Landscape mobile/tablet adjustments */
+  .image-editor-panel {
+    width: 280px;
+    height: 100%;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 0;
+    border-left: 1px solid var(--ie-border-color);
+    border-top: none;
+    transform: translateX(100%);
+  }
+
+  .image-editor-panel.expanded {
+    transform: translateX(0);
+  }
+
+  .image-editor-canvas-area {
+    margin-right: 0;
+  }
+
+  .image-editor-content {
+    flex-direction: row;
+  }
+
+  .image-editor-toolbar {
+    width: 60px;
+    height: 100%;
+    flex-direction: column;
+    border-right: 1px solid var(--ie-border-color);
+    border-bottom: none;
+  }
+}
+
+/* ==================================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ================================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch-specific enhancements */
+  .image-editor button,
+  .image-editor .button,
+  .image-editor .tool-button {
+    min-height: 48px;
+    min-width: 48px;
+    padding: var(--ie-spacing-md);
+  }
+
+  /* Remove hover states on touch devices */
+  .image-editor button:hover,
+  .image-editor .button:hover,
+  .image-editor .tool-button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Touch feedback */
+  .image-editor button:active,
+  .image-editor .button:active,
+  .image-editor .tool-button:active {
+    transform: scale(0.95);
+    background-color: var(--ie-bg-tertiary);
+  }
+  /* Larger touch targets for sliders */
+  .image-editor input[type='range'] {
+    height: 48px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .image-editor input[type='range']::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--ie-border-color-focus);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+}
+
+/* ==================================================
+   COLLAPSIBLE PANEL ANIMATIONS
+   ================================================== */
+.image-editor-panel {
+  transition:
+    width var(--ie-transition-normal),
+    height var(--ie-transition-normal),
+    transform var(--ie-transition-normal),
+    max-height var(--ie-transition-normal);
+}
+
+.image-editor-toolbar {
+  transition: width var(--ie-transition-normal);
+}
+
+/* ==================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ================================================== */
+
+/* Focus management for keyboard navigation */
+.image-editor :focus {
+  outline: 2px solid var(--ie-border-color-focus);
+  outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.image-editor .skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--ie-bg-primary);
+  color: var(--ie-text-primary);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: var(--ie-border-radius);
+  z-index: 1000;
+}
+
+.image-editor .skip-link:focus {
+  top: 6px;
+}
+
+/* Screen reader improvements */
+.image-editor .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ==================================================
+   PRINT STYLES
+   ================================================== */
+@media print {
+  .image-editor {
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .image-editor-toolbar,
+  .image-editor-panel {
+    display: none !important;
+  }
+
+  .image-editor-canvas-area {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* ==================================================
+   REDUCED MOTION SUPPORT
+   ================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .image-editor,
+  .image-editor * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .image-editor button:active {
+    transform: none !important;
+  }
+}
+
+/* ==================================================
+   HIGH CONTRAST MODE SUPPORT
+   ================================================== */
+@media (prefers-contrast: high) {
+  .image-editor {
+    border-width: 2px !important;
+  }
+
+  .image-editor button,
+  .image-editor .button,
+  .image-editor .tool-button {
+    border: 2px solid !important;
+  }
+
+  .image-editor input,
+  .image-editor select,
+  .image-editor textarea {
+    border: 2px solid !important;
+  }
+}
+
+/* ==================================================
+   DARK MODE RESPONSIVE ADJUSTMENTS
+   ================================================== */
+@media (prefers-color-scheme: dark) {
+  .image-editor-panel {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  }
+}

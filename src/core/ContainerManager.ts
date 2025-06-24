@@ -1,6 +1,9 @@
 /**
  * Container Manager - Handles the main editor container layout and resizing
  */
+import { ResponsiveManager, ResponsiveCSSHelper } from '../utils/responsive-utils';
+import { ThemeManager, ThemeChangeEvent } from '../utils/ThemeManager';
+
 export interface ContainerConfig {
   resizable?: boolean;
   showHeader?: boolean;
@@ -34,6 +37,9 @@ export class ContainerManager {
   private config: ContainerConfig;
   private elements: ContainerElements;
   private resizeObserver?: ResizeObserver;
+  private responsiveManager?: ResponsiveManager;
+  private responsiveCSSHelper?: ResponsiveCSSHelper;
+  private themeManager?: ThemeManager;
   private isResizing = false;
   private startResize: { x: number; y: number; width: number; height: number } | null = null;
   private currentHandle: string | null = null;
@@ -61,8 +67,8 @@ export class ContainerManager {
     // Initialize container structure
     this.elements = this.createContainerStructure(container, canvas);
 
-    // Apply initial theme
-    this.applyTheme();
+    // Setup theme manager
+    this.setupThemeManager();
 
     // Setup responsive behavior
     if (this.config.responsive) {
@@ -73,9 +79,6 @@ export class ContainerManager {
     if (this.config.resizable) {
       this.setupResizing();
     }
-
-    // Setup theme detection
-    this.setupThemeDetection();
   }
 
   /**
@@ -280,13 +283,31 @@ export class ContainerManager {
    * Setup responsive behavior
    */
   private setupResponsive(): void {
+    // Initialize responsive manager
+    this.responsiveManager = new ResponsiveManager(this.elements.container);
+    this.responsiveCSSHelper = new ResponsiveCSSHelper(this.responsiveManager);
+
+    // Apply initial responsive styles
+    this.responsiveCSSHelper.applyResponsiveStyles(this.elements.container);
+
+    // Listen for breakpoint changes
+    this.responsiveManager.onBreakpointChange((newBreakpoint: string) => {
+      this.handleBreakpointChange(newBreakpoint);
+    });
+
+    // Listen for orientation changes
+    this.responsiveManager.onOrientationChange((orientation) => {
+      this.handleOrientationChange(orientation);
+    });
+
+    // Setup ResizeObserver for container size changes
     this.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width } = entry.contentRect;
+        // Update responsive styles
+        this.responsiveCSSHelper?.applyResponsiveStyles(this.elements.container);
 
-        // Update responsive classes
-        this.elements.container.classList.toggle('mobile', width < 768);
-        this.elements.container.classList.toggle('tablet', width >= 768 && width < 1024);
+        // Update panel and toolbar layouts
+        this.updateResponsiveLayout();
 
         // Emit resize event
         if (this.onResize && !this.isResizing) {
@@ -303,30 +324,145 @@ export class ContainerManager {
   }
 
   /**
-   * Setup theme detection
+   * Handle breakpoint changes
    */
-  private setupThemeDetection(): void {
-    if (this.config.theme === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  private handleBreakpointChange(_newBreakpoint: string): void {
+    // Update layout based on new breakpoint
+    this.updateResponsiveLayout();
 
-      const updateTheme = () => {
-        this.applyTheme(mediaQuery.matches ? 'dark' : 'light');
-      };
+    // Auto-collapse panels on mobile
+    if (this.responsiveManager?.matches('mobile')) {
+      this.autoCollapsePanelsForMobile();
+    } else {
+      this.expandPanelsForDesktop();
+    }
 
-      updateTheme();
-      mediaQuery.addEventListener('change', updateTheme);
+    // Update canvas size for optimal display
+    this.updateCanvasForBreakpoint();
+  }
+
+  /**
+   * Handle orientation changes
+   */
+  private handleOrientationChange(orientation: 'portrait' | 'landscape'): void {
+    // Update layout for orientation
+    this.updateResponsiveLayout();
+
+    // Special handling for mobile landscape
+    if (this.responsiveManager?.matches('mobile') && orientation === 'landscape') {
+      this.setupMobileLandscapeLayout();
     }
   }
 
   /**
-   * Apply theme to container
+   * Update responsive layout based on current breakpoint
    */
-  private applyTheme(theme?: 'light' | 'dark'): void {
-    const targetTheme = theme || this.config.theme;
+  private updateResponsiveLayout(): void {
+    if (!this.responsiveManager) return;
 
-    if (targetTheme && targetTheme !== 'auto') {
-      this.elements.container.setAttribute('data-theme', targetTheme);
+    const panelLayout = this.responsiveManager.getPanelLayout();
+    const toolbarLayout = this.responsiveManager.getToolbarLayout();
+
+    // Update panel layout
+    if (this.elements.panel) {
+      this.elements.panel.setAttribute('data-layout', panelLayout);
+
+      if (panelLayout === 'bottom') {
+        this.elements.panel.classList.add('properties-panel--mobile');
+      } else {
+        this.elements.panel.classList.remove('properties-panel--mobile');
+      }
     }
+
+    // Update toolbar layout
+    if (this.elements.toolbar) {
+      this.elements.toolbar.setAttribute('data-layout', toolbarLayout);
+    }
+
+    // Update container classes for CSS targeting
+    this.elements.container.setAttribute('data-panel-layout', panelLayout);
+    this.elements.container.setAttribute('data-toolbar-layout', toolbarLayout);
+  }
+
+  /**
+   * Auto-collapse panels for mobile view
+   */
+  private autoCollapsePanelsForMobile(): void {
+    if (!this.responsiveManager) return;
+
+    if (this.elements.panel) {
+      const shouldCollapse = this.responsiveManager.shouldAutoCollapse('properties');
+      if (shouldCollapse) {
+        this.elements.panel.classList.add('collapsed');
+      }
+    }
+  }
+
+  /**
+   * Expand panels for desktop view
+   */
+  private expandPanelsForDesktop(): void {
+    if (this.elements.panel) {
+      this.elements.panel.classList.remove('collapsed');
+    }
+  }
+
+  /**
+   * Setup mobile landscape layout
+   */
+  private setupMobileLandscapeLayout(): void {
+    if (this.elements.panel) {
+      // In landscape mobile, show panel as overlay on the right
+      this.elements.panel.style.position = 'fixed';
+      this.elements.panel.style.right = '0';
+      this.elements.panel.style.top = '0';
+      this.elements.panel.style.bottom = '0';
+      this.elements.panel.style.width = '280px';
+      this.elements.panel.style.height = '100%';
+    }
+  }
+
+  /**
+   * Update canvas size for current breakpoint
+   */
+  private updateCanvasForBreakpoint(): void {
+    if (!this.responsiveManager) return;
+
+    const optimalSize = this.responsiveManager.getOptimalCanvasSize();
+
+    // Update canvas container max dimensions
+    if (this.elements.canvasContainer) {
+      this.elements.canvasContainer.style.maxWidth = `${optimalSize.width}px`;
+      this.elements.canvasContainer.style.maxHeight = `${optimalSize.height}px`;
+    }
+  }
+
+  /**
+   * Setup theme manager
+   */
+  private setupThemeManager(): void {
+    this.themeManager = new ThemeManager(this.elements.container, {
+      defaultTheme: this.config.theme || 'auto',
+      enableTransitions: true,
+      enableSystemDetection: true,
+      storageKey: 'image-editor-theme',
+    });
+
+    // Listen for theme changes
+    this.themeManager.on((event: ThemeChangeEvent) => {
+      this.handleThemeChange(event);
+    });
+  }
+
+  /**
+   * Handle theme change events
+   */
+  private handleThemeChange(event: ThemeChangeEvent): void {
+    // Update config
+    this.config.theme = event.mode;
+
+    // You can emit events here for other parts of the application
+    console.debug('Theme changed:', event);
   }
 
   /**
@@ -404,7 +540,16 @@ export class ContainerManager {
    */
   public setTheme(theme: 'light' | 'dark' | 'auto'): void {
     this.config.theme = theme;
-    this.applyTheme();
+    if (this.themeManager) {
+      this.themeManager.setTheme(theme);
+    }
+  }
+
+  /**
+   * Get theme manager
+   */
+  public getThemeManager(): ThemeManager | undefined {
+    return this.themeManager;
   }
 
   /**
@@ -413,6 +558,16 @@ export class ContainerManager {
   public destroy(): void {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+    }
+
+    // Clean up responsive manager
+    if (this.responsiveManager) {
+      this.responsiveManager.destroy();
+    }
+
+    // Clean up theme manager
+    if (this.themeManager) {
+      this.themeManager.destroy();
     }
 
     // Remove global event listeners
