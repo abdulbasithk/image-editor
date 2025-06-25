@@ -71,7 +71,7 @@ describe('Toolbar', () => {
     });
 
     it('should create tool buttons with correct attributes', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
 
       expect(selectTool).toBeTruthy();
       expect(selectTool.getAttribute('aria-label')).toBe('Select');
@@ -79,7 +79,7 @@ describe('Toolbar', () => {
     });
 
     it('should display tool icons', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
       const icon = selectTool.querySelector('.toolbar-tool-icon');
 
       expect(icon).toBeTruthy();
@@ -121,19 +121,19 @@ describe('Toolbar', () => {
     });
 
     it('should select tool programmatically', () => {
-      toolbar.selectTool('select');
+      toolbar.selectTool('selection');
 
-      const selectTool = container.querySelector('[data-tool="select"]');
+      const selectTool = container.querySelector('[data-tool="selection"]');
       expect(selectTool?.classList.contains('selected')).toBe(true);
       expect(selectTool?.getAttribute('aria-pressed')).toBe('true');
-      expect(toolbar.getSelectedTool()).toBe('select');
+      expect(toolbar.getSelectedTool()).toBe('selection');
     });
 
     it('should deselect previous tool when selecting new one', () => {
-      toolbar.selectTool('select');
+      toolbar.selectTool('selection');
       toolbar.selectTool('crop');
 
-      const selectTool = container.querySelector('[data-tool="select"]');
+      const selectTool = container.querySelector('[data-tool="selection"]');
       const cropTool = container.querySelector('[data-tool="crop"]');
 
       expect(selectTool?.classList.contains('selected')).toBe(false);
@@ -146,12 +146,12 @@ describe('Toolbar', () => {
       const mockCallback = jest.fn();
       toolbar.on('toolSelected', mockCallback);
 
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
       selectTool.click();
 
       expect(mockCallback).toHaveBeenCalledWith({
-        toolId: 'select',
-        tool: expect.objectContaining({ id: 'select' }),
+        toolId: 'selection',
+        tool: expect.objectContaining({ id: 'selection' }),
       });
     });
   });
@@ -169,8 +169,8 @@ describe('Toolbar', () => {
       document.dispatchEvent(event);
 
       expect(mockCallback).toHaveBeenCalledWith({
-        toolId: 'select',
-        tool: expect.objectContaining({ id: 'select' }),
+        toolId: 'selection',
+        tool: expect.objectContaining({ id: 'selection' }),
       });
     });
     it('should handle modifier key shortcuts', () => {
@@ -222,7 +222,7 @@ describe('Toolbar', () => {
     });
 
     it('should show tooltip on hover', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
       const tooltip = document.querySelector('.toolbar-tooltip') as HTMLElement;
 
       selectTool.dispatchEvent(new Event('mouseenter'));
@@ -232,7 +232,7 @@ describe('Toolbar', () => {
     });
 
     it('should hide tooltip on leave', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
       const tooltip = document.querySelector('.toolbar-tooltip') as HTMLElement;
 
       selectTool.dispatchEvent(new Event('mouseenter'));
@@ -242,7 +242,7 @@ describe('Toolbar', () => {
     });
 
     it('should include shortcuts in tooltip text', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
       const tooltip = document.querySelector('.toolbar-tooltip') as HTMLElement;
 
       selectTool.dispatchEvent(new Event('mouseenter'));
@@ -305,12 +305,12 @@ describe('Toolbar', () => {
     });
 
     it('should enable/disable tools', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
 
-      toolbar.setToolEnabled('select', false);
+      toolbar.setToolEnabled('selection', false);
       expect(selectTool.disabled).toBe(true);
 
-      toolbar.setToolEnabled('select', true);
+      toolbar.setToolEnabled('selection', true);
       expect(selectTool.disabled).toBe(false);
     });
   });
@@ -324,7 +324,7 @@ describe('Toolbar', () => {
       const mockCallback = jest.fn();
 
       toolbar.on('toolSelected', mockCallback);
-      toolbar.selectTool('select');
+      toolbar.selectTool('selection');
       expect(mockCallback).toHaveBeenCalledTimes(1);
 
       toolbar.off('toolSelected', mockCallback);
@@ -339,18 +339,18 @@ describe('Toolbar', () => {
       toolbar.on('toolHover', hoverCallback);
       toolbar.on('toolLeave', leaveCallback);
 
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
 
       selectTool.dispatchEvent(new Event('mouseenter'));
       expect(hoverCallback).toHaveBeenCalledWith({
-        toolId: 'select',
-        tool: expect.objectContaining({ id: 'select' }),
+        toolId: 'selection',
+        tool: expect.objectContaining({ id: 'selection' }),
       });
 
       selectTool.dispatchEvent(new Event('mouseleave'));
       expect(leaveCallback).toHaveBeenCalledWith({
-        toolId: 'select',
-        tool: expect.objectContaining({ id: 'select' }),
+        toolId: 'selection',
+        tool: expect.objectContaining({ id: 'selection' }),
       });
     });
   });
@@ -396,7 +396,7 @@ describe('Toolbar', () => {
       toolbar.on('toolHover', hoverCallback);
       toolbar.on('toolLeave', leaveCallback);
 
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
 
       selectTool.dispatchEvent(new Event('focus'));
       expect(hoverCallback).toHaveBeenCalled();
@@ -406,11 +406,11 @@ describe('Toolbar', () => {
     });
 
     it('should update aria-pressed for selected tools', () => {
-      const selectTool = container.querySelector('[data-tool="select"]') as HTMLButtonElement;
+      const selectTool = container.querySelector('[data-tool="selection"]') as HTMLButtonElement;
 
       expect(selectTool.getAttribute('aria-pressed')).toBeFalsy();
 
-      toolbar.selectTool('select');
+      toolbar.selectTool('selection');
       expect(selectTool.getAttribute('aria-pressed')).toBe('true');
     });
   });

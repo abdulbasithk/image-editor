@@ -10,6 +10,8 @@ import { HistoryManager } from './HistoryManager';
 import { ImageLoader, ImageLoadOptions, ImageLoadResult } from './ImageLoader';
 import { ContainerManager, ContainerConfig, ResizeEvent } from './ContainerManager';
 import { ResizeTool } from '../tools/ResizeTool';
+import { RotationTool } from '../tools/RotationTool';
+import { SelectionTool } from '../tools/SelectionTool';
 
 export class ImageEditor {
   private config: ImageEditorConfig;
@@ -91,6 +93,8 @@ export class ImageEditor {
 
     // Register built-in tools
     this.tools.set('resize', new ResizeTool(this, this.canvasManager));
+    this.tools.set('rotation', new RotationTool(this, this.canvasManager));
+    this.tools.set('selection', new SelectionTool(this, this.canvasManager));
 
     // Setup event delegation for tool interactions
     this.setupEventDelegation();

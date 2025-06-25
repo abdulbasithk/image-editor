@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ImageEditor Library - Complete Demo</title>
+    <link rel="stylesheet" href="demo.css" />
+  </head>
+  <body>
+    <div class="demo-container">
+      <!-- Demo Header -->
+      <header class="demo-header">
+        <h1 class="demo-title">🎨 ImageEditor Library</h1>
+        <div class="demo-actions">
+          <button class="demo-btn demo-btn-icon" id="theme-toggle" data-tooltip="Toggle Theme">
+            🌗
+          </button>
+          <button class="demo-btn demo-btn-secondary" id="load-sample">📷 Load Sample</button>
+          <button class="demo-btn demo-btn-primary" id="upload-btn">⬆️ Upload Image</button>
+        </div>
+      </header>
+
+      <!-- Demo Main Content -->
+      <main class="demo-main">
+        <!-- Features Sidebar -->
+        <aside class="demo-sidebar">
+          <!-- File Operations -->
+          <div class="demo-section">
+            <h3 class="demo-section-title">📁 File Operations</h3>
+            <div class="demo-feature-grid">
+              <button class="demo-feature-btn" id="btn-open">
+                <div class="demo-feature-icon">📂</div>
+                <div class="demo-feature-name">Open</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-save">
+                <div class="demo-feature-icon">💾</div>
+                <div class="demo-feature-name">Save</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-export">
+                <div class="demo-feature-icon">📤</div>
+                <div class="demo-feature-name">Export</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-new">
+                <div class="demo-feature-icon">📄</div>
+                <div class="demo-feature-name">New</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tools -->
+          <div class="demo-section">
+            <h3 class="demo-section-title">🔧 Tools</h3>
+            <div class="demo-feature-grid">
+              <button class="demo-feature-btn active" id="tool-select" data-tool="select">
+                <div class="demo-feature-icon">⬜</div>
+                <div class="demo-feature-name">Select</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-crop" data-tool="crop">
+                <div class="demo-feature-icon">✂️</div>
+                <div class="demo-feature-name">Crop</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-resize" data-tool="resize">
+                <div class="demo-feature-icon">📐</div>
+                <div class="demo-feature-name">Resize</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-rotation" data-tool="rotation">
+                <div class="demo-feature-icon">🔄</div>
+                <div class="demo-feature-name">Rotation</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-brush" data-tool="brush">
+                <div class="demo-feature-icon">🖌️</div>
+                <div class="demo-feature-name">Brush</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-text" data-tool="text">
+                <div class="demo-feature-icon">📝</div>
+                <div class="demo-feature-name">Text</div>
+              </button>
+              <button class="demo-feature-btn" id="tool-shapes" data-tool="shapes">
+                <div class="demo-feature-icon">⭕</div>
+                <div class="demo-feature-name">Shapes</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transform -->
+          <div class="demo-section">
+            <h3 class="demo-section-title">🔄 Transform</h3>
+            <div class="demo-feature-grid">
+              <button class="demo-feature-btn" id="btn-rotate-left">
+                <div class="demo-feature-icon">↺</div>
+                <div class="demo-feature-name">Rotate Left</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-rotate-right">
+                <div class="demo-feature-icon">↻</div>
+                <div class="demo-feature-name">Rotate Right</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-flip-h">
+                <div class="demo-feature-icon">↔️</div>
+                <div class="demo-feature-name">Flip H</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-flip-v">
+                <div class="demo-feature-icon">↕️</div>
+                <div class="demo-feature-name">Flip V</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- View Controls -->
+          <div class="demo-section">
+            <h3 class="demo-section-title">👁️ View</h3>
+            <div class="demo-feature-grid">
+              <button class="demo-feature-btn" id="btn-zoom-in">
+                <div class="demo-feature-icon">🔍</div>
+                <div class="demo-feature-name">Zoom In</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-zoom-out">
+                <div class="demo-feature-icon">🔎</div>
+                <div class="demo-feature-name">Zoom Out</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-fit">
+                <div class="demo-feature-icon">📱</div>
+                <div class="demo-feature-name">Fit</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-actual">
+                <div class="demo-feature-icon">1️⃣</div>
+                <div class="demo-feature-name">100%</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="demo-section">
+            <h3 class="demo-section-title">⏮️ History</h3>
+            <div class="demo-feature-grid">
+              <button class="demo-feature-btn" id="btn-undo">
+                <div class="demo-feature-icon">↶</div>
+                <div class="demo-feature-name">Undo</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-redo">
+                <div class="demo-feature-icon">↷</div>
+                <div class="demo-feature-name">Redo</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-clear">
+                <div class="demo-feature-icon">🗑️</div>
+                <div class="demo-feature-name">Clear</div>
+              </button>
+              <button class="demo-feature-btn" id="btn-reset">
+                <div class="demo-feature-icon">🔄</div>
+                <div class="demo-feature-name">Reset</div>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Editor Area -->
+        <div class="demo-editor-area">
+          <!-- Editor Toolbar -->
+          <div class="demo-editor-toolbar">
+            <div class="demo-tool-group">
+              <button
+                class="demo-tool-btn active"
+                id="toolbar-select"
+                data-tooltip="Select Tool (V)"
+              >
+                <span>⬜</span>
+              </button>
+              <button class="demo-tool-btn" id="toolbar-move" data-tooltip="Move Tool (M)">
+                <span>✋</span>
+              </button>
+              <div class="demo-tool-separator"></div>
+              <button class="demo-tool-btn" id="toolbar-crop" data-tooltip="Crop Tool (C)">
+                <span>✂️</span>
+              </button>
+              <button class="demo-tool-btn" id="toolbar-resize" data-tooltip="Resize Tool (R)">
+                <span>📐</span>
+              </button>
+              <button class="demo-tool-btn" id="toolbar-rotation" data-tooltip="Rotation Tool (O)">
+                <span>🔄</span>
+              </button>
+              <div class="demo-tool-separator"></div>
+              <button class="demo-tool-btn" id="toolbar-brush" data-tooltip="Brush Tool (B)">
+                <span>🖌️</span>
+              </button>
+              <button class="demo-tool-btn" id="toolbar-text" data-tooltip="Text Tool (T)">
+                <span>📝</span>
+              </button>
+            </div>
+            <div class="demo-tool-group">
+              <span id="current-tool">Select Tool</span>
+            </div>
+          </div>
+
+          <!-- Editor Content -->
+          <div class="demo-editor-content">
+            <!-- Canvas Area -->
+            <div class="demo-canvas-area" id="canvas-area">
+              <!-- Upload Area (shown when no image) -->
+              <div class="demo-upload-area" id="upload-area">
+                <div class="demo-upload-icon">📸</div>
+                <div class="demo-upload-text">Drop an image here or click to upload</div>
+                <div class="demo-upload-hint">Supports JPG, PNG, WebP, GIF</div>
+              </div>
+
+              <!-- Canvas Container (shown when image loaded) -->
+              <div class="demo-canvas-container" id="canvas-container" style="display: none">
+                <!-- ImageEditor will inject canvas here -->
+              </div>
+            </div>
+
+            <!-- Properties Panel -->
+            <div class="demo-properties" id="properties-panel">
+              <div class="demo-property-group" id="tool-properties">
+                <div class="demo-property-title">Tool Properties</div>
+                <div id="tool-properties-content">
+                  <p style="color: #718096; font-size: 0.9rem; text-align: center; margin: 2rem 0">
+                    Select a tool to see its properties
+                  </p>
+                </div>
+              </div>
+
+              <div class="demo-property-group" id="image-info">
+                <div class="demo-property-title">Image Information</div>
+                <div class="demo-property-control">
+                  <span class="demo-property-label">Dimensions</span>
+                  <div id="image-dimensions">No image loaded</div>
+                </div>
+                <div class="demo-property-control">
+                  <span class="demo-property-label">File Size</span>
+                  <div id="image-size">-</div>
+                </div>
+                <div class="demo-property-control">
+                  <span class="demo-property-label">Format</span>
+                  <div id="image-format">-</div>
+                </div>
+              </div>
+
+              <div class="demo-property-group" id="canvas-settings">
+                <div class="demo-property-title">Canvas Settings</div>
+                <div class="demo-property-control">
+                  <label class="demo-property-label" for="canvas-width">Width</label>
+                  <input
+                    type="number"
+                    id="canvas-width"
+                    class="demo-property-input"
+                    value="800"
+                    min="1"
+                    max="4096"
+                  />
+                </div>
+                <div class="demo-property-control">
+                  <label class="demo-property-label" for="canvas-height">Height</label>
+                  <input
+                    type="number"
+                    id="canvas-height"
+                    class="demo-property-input"
+                    value="600"
+                    min="1"
+                    max="4096"
+                  />
+                </div>
+                <div class="demo-property-control">
+                  <label class="demo-property-checkbox">
+                    <input type="checkbox" id="maintain-aspect" checked />
+                    <span>Maintain aspect ratio</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Bar -->
+          <div class="demo-status">
+            <div class="demo-status-info">
+              <div class="demo-status-item">
+                <span>📍</span>
+                <span id="mouse-position">0, 0</span>
+              </div>
+              <div class="demo-status-item">
+                <span>🔍</span>
+                <span id="zoom-level">100%</span>
+              </div>
+              <div class="demo-status-item">
+                <span>📏</span>
+                <span id="canvas-size">800 × 600</span>
+              </div>
+            </div>
+            <div class="demo-status-info">
+              <div class="demo-status-item">
+                <span id="status-message">Ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-input" accept="image/*" style="display: none" />
+
+    <script src="bundle.js"></script>
+  </body>
+</html>

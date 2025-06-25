@@ -34,10 +34,10 @@ export const defaultToolbarConfig: ToolbarConfig = {
       separator: true,
       tools: [
         {
-          id: 'select',
+          id: 'selection',
           name: 'Select',
           icon: ToolbarIcons.select,
-          tooltip: 'Selection tool',
+          tooltip: 'Selection tool (V)',
           shortcut: 'V',
         },
         {

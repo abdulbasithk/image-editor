@@ -49,6 +49,9 @@ export { DrawCommand, ClearCanvasCommand, TextCommand } from './commands/BasicCo
 // Tools
 export { CropTool } from './tools/CropTool';
 export { ResizeTool } from './tools/ResizeTool';
+export { RotationTool } from './tools/RotationTool';
+export { SelectionTool } from './tools/SelectionTool';
+export type { SelectionArea, SelectionOptions } from './tools/SelectionTool';
 
 // Plugins
 export { LoggerPlugin } from './plugins/LoggerPlugin';

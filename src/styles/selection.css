@@ -1,0 +1,127 @@
+/* Selection Tool Styles */
+
+/* Selection overlay canvas positioning */
+.ie-selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Selection area styles */
+.ie-selection-area {
+  position: absolute;
+  border: 1px dashed var(--ie-color-primary, #007acc);
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Animated marching ants effect */
+@keyframes marchingAnts {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 8px;
+  }
+}
+
+.ie-selection-area.ie-animated {
+  animation: marchingAnts 0.5s linear infinite;
+}
+
+/* Selection handles */
+.ie-selection-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--ie-color-background, #fff);
+  border: 1px solid var(--ie-color-border, #333);
+  pointer-events: auto;
+  z-index: 11;
+}
+
+.ie-selection-handle:hover {
+  background: var(--ie-color-primary, #007acc);
+}
+
+/* Handle cursors */
+.ie-selection-handle.ie-handle-nw {
+  cursor: nw-resize;
+}
+.ie-selection-handle.ie-handle-n {
+  cursor: n-resize;
+}
+.ie-selection-handle.ie-handle-ne {
+  cursor: ne-resize;
+}
+.ie-selection-handle.ie-handle-e {
+  cursor: e-resize;
+}
+.ie-selection-handle.ie-handle-se {
+  cursor: se-resize;
+}
+.ie-selection-handle.ie-handle-s {
+  cursor: s-resize;
+}
+.ie-selection-handle.ie-handle-sw {
+  cursor: sw-resize;
+}
+.ie-selection-handle.ie-handle-w {
+  cursor: w-resize;
+}
+
+/* Selection info display */
+.ie-selection-info {
+  position: absolute;
+  background: var(--ie-color-background-overlay, rgba(0, 0, 0, 0.8));
+  color: var(--ie-color-text-inverse, #fff);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--ie-font-family-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
+  pointer-events: none;
+  z-index: 12;
+  white-space: nowrap;
+}
+
+/* Dark theme adjustments */
+.ie-theme-dark .ie-selection-handle {
+  background: var(--ie-color-background-secondary, #2d2d2d);
+  border-color: var(--ie-color-border-light, #666);
+}
+
+.ie-theme-dark .ie-selection-handle:hover {
+  background: var(--ie-color-primary, #0078d4);
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .ie-selection-area {
+    border-width: 2px;
+    border-color: var(--ie-color-text, #000);
+  }
+
+  .ie-selection-handle {
+    border-width: 2px;
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ie-selection-area.ie-animated {
+    animation: none;
+    border-style: solid;
+  }
+}
+
+/* Mobile/touch optimizations */
+@media (pointer: coarse) {
+  .ie-selection-handle {
+    width: 12px;
+    height: 12px;
+  }
+}

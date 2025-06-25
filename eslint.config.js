@@ -38,6 +38,9 @@ module.exports = [
         HTMLInputElement: 'readonly',
         HTMLButtonElement: 'readonly',
         HTMLSelectElement: 'readonly',
+        HTMLSpanElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLFormElement: 'readonly',
         MediaQueryListEvent: 'readonly',
         CanvasRenderingContext2D: 'readonly',
         ImageData: 'readonly',
@@ -51,7 +54,10 @@ module.exports = [
         Node: 'readonly',
         URL: 'readonly',
         MediaQueryList: 'readonly',
-
+        performance: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        TouchList: 'readonly',
         // Event types
         MouseEvent: 'readonly',
         KeyboardEvent: 'readonly',

@@ -56,6 +56,11 @@ export class CanvasArea extends EventEmitter {
     { value: 5.0, label: '500%' },
   ];
 
+  private animationFrame: number | null = null;
+  private touchStartDistance: number | null = null;
+  private touchStartZoom: number | null = null;
+  private touchStartCenter: Point | null = null;
+
   constructor(container: HTMLElement, config: CanvasAreaConfig = {}) {
     super();
 
@@ -259,30 +264,54 @@ export class CanvasArea extends EventEmitter {
   }
 
   private handleWheel(event: WheelEvent): void {
-    if (event.ctrlKey || event.metaKey) {
-      // Zoom with Ctrl+scroll
-      event.preventDefault();
-      const delta = event.deltaY > 0 ? -this.config.zoomStep : this.config.zoomStep;
-      const newZoom = Math.max(
-        this.config.minZoom,
-        Math.min(this.config.maxZoom, this.viewport.zoom + delta),
-      );
-      this.setZoom(newZoom);
-    }
+    // Allow mouse wheel zoom without Ctrl key for better UX
+    event.preventDefault();
+
+    // Get cursor position relative to canvas
+    const rect = this.canvas.getBoundingClientRect();
+    const cursorX = event.clientX - rect.left;
+    const cursorY = event.clientY - rect.top;
+
+    // Calculate zoom delta
+    const delta = event.deltaY > 0 ? -this.config.zoomStep : this.config.zoomStep;
+    const newZoom = Math.max(
+      this.config.minZoom,
+      Math.min(this.config.maxZoom, this.viewport.zoom + delta),
+    );
+
+    // Zoom centered on cursor position
+    this.setZoomAtPoint(newZoom, cursorX, cursorY);
   }
   private handleTouchStart(event: TouchEvent): void {
     if (event.touches.length === 1 && this.config.enablePan) {
+      // Single touch - start panning
       this.isPanning = true;
       const touch = event.touches[0];
       if (touch) {
         this.lastPanPoint = { x: touch.clientX, y: touch.clientY };
       }
       event.preventDefault();
+    } else if (event.touches.length === 2) {
+      // Two touches - start pinch zoom
+      this.isPanning = false;
+      this.touchStartDistance = this.getTouchDistance(event.touches);
+      this.touchStartZoom = this.viewport.zoom;
+
+      // Get touch center relative to canvas
+      const rect = this.canvas.getBoundingClientRect();
+      const center = this.getTouchCenter(event.touches);
+      this.touchStartCenter = {
+        x: center.x - rect.left,
+        y: center.y - rect.top,
+      };
+
+      event.preventDefault();
     }
   }
 
   private handleTouchMove(event: TouchEvent): void {
     if (event.touches.length === 1 && this.isPanning && this.config.enablePan) {
+      // Single touch - continue panning
       const touch = event.touches[0];
       if (touch) {
         const deltaX = touch.clientX - this.lastPanPoint.x;
@@ -292,12 +321,46 @@ export class CanvasArea extends EventEmitter {
         this.lastPanPoint = { x: touch.clientX, y: touch.clientY };
       }
       event.preventDefault();
+    } else if (
+      event.touches.length === 2 &&
+      this.touchStartDistance &&
+      this.touchStartZoom &&
+      this.touchStartCenter
+    ) {
+      // Two touches - handle pinch zoom
+      const currentDistance = this.getTouchDistance(event.touches);
+      if (currentDistance > 0 && this.touchStartDistance > 0) {
+        const zoomFactor = currentDistance / this.touchStartDistance;
+        const newZoom = this.touchStartZoom * zoomFactor;
+
+        // Zoom centered on the pinch point
+        this.setZoomAtPoint(newZoom, this.touchStartCenter.x, this.touchStartCenter.y);
+      }
+      event.preventDefault();
     }
   }
 
   private handleTouchEnd(event: TouchEvent): void {
     if (event.touches.length === 0) {
+      // All touches ended
       this.isPanning = false;
+      this.touchStartDistance = null;
+      this.touchStartZoom = null;
+      this.touchStartCenter = null;
+      event.preventDefault();
+    } else if (event.touches.length === 1) {
+      // One touch remaining - switch to pan mode if pan is enabled
+      this.touchStartDistance = null;
+      this.touchStartZoom = null;
+      this.touchStartCenter = null;
+
+      if (this.config.enablePan) {
+        this.isPanning = true;
+        const touch = event.touches[0];
+        if (touch) {
+          this.lastPanPoint = { x: touch.clientX, y: touch.clientY };
+        }
+      }
       event.preventDefault();
     }
   }
@@ -418,25 +481,134 @@ export class CanvasArea extends EventEmitter {
     minimapViewport.style.height = (this.viewport.height * scaleY) / this.viewport.zoom + 'px';
   }
 
-  // Public API methods
-  public setZoom(zoom: number): void {
+  /**
+   * Set zoom level centered on a specific point
+   */
+  public setZoomAtPoint(zoom: number, pointX: number, pointY: number): void {
     const oldZoom = this.viewport.zoom;
-    this.viewport.zoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
+    const newZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
 
-    if (oldZoom !== this.viewport.zoom) {
+    if (oldZoom !== newZoom) {
+      // Calculate the point in world coordinates before zoom
+      const worldX = (pointX - this.viewport.x) / oldZoom;
+      const worldY = (pointY - this.viewport.y) / oldZoom;
+
+      // Update zoom
+      this.viewport.zoom = newZoom;
+
+      // Adjust viewport to keep the world point under the cursor
+      this.viewport.x = pointX - worldX * newZoom;
+      this.viewport.y = pointY - worldY * newZoom;
+
+      this.animateZoom(oldZoom, newZoom);
+    }
+  }
+
+  /**
+   * Animate zoom change for smooth transitions
+   */
+  private animateZoom(_fromZoom: number, _toZoom: number): void {
+    if (this.animationFrame && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.animationFrame);
+    }
+
+    // Skip animation if requestAnimationFrame is not available (e.g., in tests)
+    if (typeof requestAnimationFrame === 'undefined') {
       this.updateCanvasTransform();
       this.updateZoomControls();
       this.updateMinimap();
       this.emit('zoomChanged', { zoom: this.viewport.zoom, viewport: { ...this.viewport } });
+      return;
+    }
+
+    const startTime = performance.now();
+    const duration = 150; // 150ms animation
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      if (progress < 1) {
+        this.updateCanvasTransform();
+        this.updateZoomControls();
+        this.updateMinimap();
+        this.emit('zoomChanged', { zoom: this.viewport.zoom, viewport: { ...this.viewport } });
+
+        this.animationFrame = requestAnimationFrame(animate);
+      } else {
+        this.animationFrame = null;
+        this.updateCanvasTransform();
+        this.updateZoomControls();
+        this.updateMinimap();
+        this.emit('zoomChanged', { zoom: this.viewport.zoom, viewport: { ...this.viewport } });
+      }
+    };
+
+    this.animationFrame = requestAnimationFrame(animate);
+  }
+
+  /**
+   * Calculate distance between two touch points
+   */
+  private getTouchDistance(touches: TouchList): number {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    if (!touch1 || !touch2) return 0;
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Calculate center point between two touches
+   */
+  private getTouchCenter(touches: TouchList): Point {
+    if (touches.length < 2) {
+      const touch = touches[0];
+      return touch ? { x: touch.clientX, y: touch.clientY } : { x: 0, y: 0 };
+    }
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    if (!touch1 || !touch2) return { x: 0, y: 0 };
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2,
+    };
+  }
+
+  // Public API methods
+  public setZoom(zoom: number, animate: boolean = false): void {
+    const oldZoom = this.viewport.zoom;
+    const newZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
+
+    if (oldZoom !== newZoom) {
+      this.viewport.zoom = newZoom;
+
+      if (animate) {
+        this.animateZoom(oldZoom, newZoom);
+      } else {
+        this.updateCanvasTransform();
+        this.updateZoomControls();
+        this.updateMinimap();
+        this.emit('zoomChanged', { zoom: this.viewport.zoom, viewport: { ...this.viewport } });
+      }
     }
   }
 
   public zoomIn(): void {
-    this.setZoom(this.viewport.zoom + this.config.zoomStep);
+    // Calculate center of viewport for smooth zooming
+    const centerX = this.viewport.width / 2;
+    const centerY = this.viewport.height / 2;
+    const newZoom = this.viewport.zoom + this.config.zoomStep;
+    this.setZoomAtPoint(newZoom, centerX, centerY);
   }
 
   public zoomOut(): void {
-    this.setZoom(this.viewport.zoom - this.config.zoomStep);
+    // Calculate center of viewport for smooth zooming
+    const centerX = this.viewport.width / 2;
+    const centerY = this.viewport.height / 2;
+    const newZoom = this.viewport.zoom - this.config.zoomStep;
+    this.setZoomAtPoint(newZoom, centerX, centerY);
   }
 
   public fitToScreen(): void {
@@ -512,6 +684,12 @@ export class CanvasArea extends EventEmitter {
   }
 
   public destroy(): void {
+    // Cancel any ongoing animations
+    if (this.animationFrame && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
+    }
+
     // Remove event listeners
     window.removeEventListener('resize', this.handleResize.bind(this));
 

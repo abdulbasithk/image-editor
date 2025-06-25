@@ -25,3 +25,4 @@ export {
   ToolbarIcons,
 } from './ToolbarConfig';
 export { createResizeControls } from './ResizeControls';
+export { createRotationControls } from './RotationControls';

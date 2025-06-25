@@ -10,6 +10,7 @@
 @import './toolbar.css';
 @import './canvas-area.css';
 @import './properties-panel.css';
+@import './selection.css';
 
 /* Import responsive layout styles */
 @import './responsive.css';

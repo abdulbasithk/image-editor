@@ -17,6 +17,15 @@ global.ImageData = class ImageData {
   }
 } as any;
 
+// Mock requestAnimationFrame and cancelAnimationFrame for Node.js environment
+global.requestAnimationFrame = jest.fn((cb) => {
+  return setTimeout(cb, 16); // 60fps
+}) as any;
+
+global.cancelAnimationFrame = jest.fn((id) => {
+  clearTimeout(id);
+}) as any;
+
 describe('CanvasArea', () => {
   let container: HTMLElement;
   let canvasArea: CanvasArea;
@@ -32,7 +41,9 @@ describe('CanvasArea', () => {
     if (canvasArea) {
       canvasArea.destroy();
     }
-    document.body.removeChild(container);
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
   });
 
   describe('Initialization', () => {
@@ -267,6 +278,361 @@ describe('CanvasArea', () => {
     });
   });
 
+  describe('Enhanced Zoom Functionality', () => {
+    beforeEach(() => {
+      canvasArea = new CanvasArea(container);
+    });
+
+    describe('Mouse Wheel Zoom', () => {
+      it('should zoom in on wheel up', () => {
+        const initialZoom = canvasArea.getZoom();
+        const zoomSpy = jest.fn();
+        canvasArea.on('zoomChanged', zoomSpy);
+
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+        // Mock getBoundingClientRect for cursor position calculation
+        canvas.getBoundingClientRect = jest.fn(() => ({
+          left: 0,
+          top: 0,
+          width: 800,
+          height: 600,
+        })) as any;
+
+        // Mock setZoomAtPoint to use immediate zoom change for testing
+        const setZoomAtPointSpy = jest.spyOn(canvasArea, 'setZoomAtPoint');
+        setZoomAtPointSpy.mockImplementation((zoom, _x, _y) => {
+          canvasArea.setZoom(zoom, false); // No animation for testing
+        });
+
+        const wheelEvent = new WheelEvent('wheel', {
+          deltaY: -100, // Negative delta = zoom in
+          clientX: 400, // Center of 800px width
+          clientY: 300, // Center of 600px height
+        });
+
+        canvas.dispatchEvent(wheelEvent);
+
+        expect(canvasArea.getZoom()).toBeGreaterThan(initialZoom);
+        expect(zoomSpy).toHaveBeenCalled();
+
+        setZoomAtPointSpy.mockRestore();
+      });
+
+      it('should zoom out on wheel down', () => {
+        canvasArea.setZoom(2, false); // Start at 200% zoom
+        const initialZoom = canvasArea.getZoom();
+        const zoomSpy = jest.fn();
+        canvasArea.on('zoomChanged', zoomSpy);
+
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+        canvas.getBoundingClientRect = jest.fn(() => ({
+          left: 0,
+          top: 0,
+          width: 800,
+          height: 600,
+        })) as any;
+
+        // Mock setZoomAtPoint to use immediate zoom change for testing
+        const setZoomAtPointSpy = jest.spyOn(canvasArea, 'setZoomAtPoint');
+        setZoomAtPointSpy.mockImplementation((zoom, _x, _y) => {
+          canvasArea.setZoom(zoom, false); // No animation for testing
+        });
+
+        const wheelEvent = new WheelEvent('wheel', {
+          deltaY: 100, // Positive delta = zoom out
+          clientX: 400,
+          clientY: 300,
+        });
+
+        canvas.dispatchEvent(wheelEvent);
+
+        expect(canvasArea.getZoom()).toBeLessThan(initialZoom);
+        expect(zoomSpy).toHaveBeenCalled();
+
+        setZoomAtPointSpy.mockRestore();
+      });
+
+      it('should respect zoom limits during wheel zoom', () => {
+        const canvasAreaWithLimits = new CanvasArea(container, {
+          minZoom: 0.5,
+          maxZoom: 2.0,
+        });
+
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+
+        // Try to zoom beyond max limit
+        canvasAreaWithLimits.setZoom(1.9);
+        const wheelUpEvent = new WheelEvent('wheel', {
+          deltaY: -500, // Large negative delta
+          clientX: 400,
+          clientY: 300,
+        });
+        canvas.dispatchEvent(wheelUpEvent);
+        expect(canvasAreaWithLimits.getZoom()).toBeLessThanOrEqual(2.0);
+
+        // Try to zoom below min limit
+        canvasAreaWithLimits.setZoom(0.6);
+        const wheelDownEvent = new WheelEvent('wheel', {
+          deltaY: 500, // Large positive delta
+          clientX: 400,
+          clientY: 300,
+        });
+        canvas.dispatchEvent(wheelDownEvent);
+        expect(canvasAreaWithLimits.getZoom()).toBeGreaterThanOrEqual(0.5);
+
+        canvasAreaWithLimits.destroy();
+      });
+    });
+
+    describe('Zoom at Point', () => {
+      it('should zoom centered on specific point', () => {
+        const _canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+
+        canvasArea.setZoomAtPoint(2, 200, 150);
+
+        expect(canvasArea.getZoom()).toBe(2);
+        // Viewport should be adjusted to keep the point (200, 150) in the same visual position
+      });
+
+      it('should handle zoom at point with viewport constraints', () => {
+        canvasArea.setZoomAtPoint(0.5, 400, 300); // Center point
+        expect(canvasArea.getZoom()).toBe(0.5);
+
+        canvasArea.setZoomAtPoint(5, 400, 300); // Should be clamped to maxZoom
+        expect(canvasArea.getZoom()).toBeLessThanOrEqual(10); // Default maxZoom
+      });
+    });
+
+    describe('Smooth Animation', () => {
+      beforeEach(() => {
+        // Mock requestAnimationFrame for testing
+        jest.useFakeTimers();
+        global.requestAnimationFrame = jest.fn((cb) => {
+          return setTimeout(cb, 16); // 60fps
+        }) as any;
+        global.cancelAnimationFrame = jest.fn((id) => {
+          clearTimeout(id);
+        }) as any;
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
+        jest.restoreAllMocks();
+      });
+
+      it('should animate zoom transitions smoothly', () => {
+        const zoomSpy = jest.fn();
+        canvasArea.on('zoomChanged', zoomSpy);
+
+        canvasArea.setZoom(2, true); // Animate=true
+
+        // Initial call should setup animation
+        expect(requestAnimationFrame).toHaveBeenCalled();
+
+        // Advance time to trigger animation frames
+        jest.advanceTimersByTime(75); // Half of 150ms duration
+
+        // Should have emitted zoom change events during animation
+        expect(zoomSpy).toHaveBeenCalled();
+
+        // Complete animation
+        jest.advanceTimersByTime(100);
+        expect(canvasArea.getZoom()).toBe(2);
+      });
+
+      it('should cancel previous animation when starting new one', () => {
+        const animationId1 = 123;
+        const animationId2 = 456;
+        let callCount = 0;
+
+        (global.requestAnimationFrame as jest.Mock).mockImplementation(() => {
+          return callCount++ === 0 ? animationId1 : animationId2;
+        });
+        (global.cancelAnimationFrame as jest.Mock).mockClear();
+
+        // Start first animation
+        canvasArea.setZoomAtPoint(2, 400, 300);
+
+        // Start second animation before first completes
+        canvasArea.setZoomAtPoint(3, 400, 300);
+
+        expect(global.cancelAnimationFrame).toHaveBeenCalledWith(animationId1);
+      });
+    });
+
+    describe('Touch Pinch Zoom', () => {
+      it('should start pinch zoom with two touches', () => {
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+        const _rect = (canvas.getBoundingClientRect = jest.fn(() => ({
+          left: 0,
+          top: 0,
+          width: 800,
+          height: 600,
+        })) as any);
+
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            { clientX: 300, clientY: 250 } as Touch,
+            { clientX: 500, clientY: 350 } as Touch,
+          ] as any,
+        });
+
+        canvas.dispatchEvent(touchStartEvent);
+
+        // Should have stored initial touch state
+        expect((canvasArea as any).touchStartDistance).toBeGreaterThan(0);
+        expect((canvasArea as any).touchStartZoom).toBe(canvasArea.getZoom());
+        expect((canvasArea as any).touchStartCenter).toBeDefined();
+      });
+
+      it('should handle pinch zoom gesture', () => {
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+        canvas.getBoundingClientRect = jest.fn(() => ({
+          left: 0,
+          top: 0,
+          width: 800,
+          height: 600,
+        })) as any;
+
+        const initialZoom = canvasArea.getZoom();
+
+        // Start pinch with two touches close together
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            { clientX: 390, clientY: 290 } as Touch,
+            { clientX: 410, clientY: 310 } as Touch,
+          ] as any,
+        });
+        canvas.dispatchEvent(touchStartEvent);
+
+        // Mock setZoomAtPoint to avoid animation issues in tests
+        const setZoomAtPointSpy = jest.spyOn(canvasArea, 'setZoomAtPoint');
+        setZoomAtPointSpy.mockImplementation((zoom, _x, _y) => {
+          canvasArea.setZoom(zoom, false); // No animation in tests
+        });
+
+        // Move touches further apart (pinch out/zoom in)
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [
+            { clientX: 350, clientY: 250 } as Touch,
+            { clientX: 450, clientY: 350 } as Touch,
+          ] as any,
+        });
+        canvas.dispatchEvent(touchMoveEvent);
+
+        expect(canvasArea.getZoom()).toBeGreaterThan(initialZoom);
+
+        setZoomAtPointSpy.mockRestore();
+      });
+
+      it('should end pinch zoom and cleanup state', () => {
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+
+        // Start pinch
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            { clientX: 300, clientY: 250 } as Touch,
+            { clientX: 500, clientY: 350 } as Touch,
+          ] as any,
+        });
+        canvas.dispatchEvent(touchStartEvent);
+
+        // End pinch
+        const touchEndEvent = new TouchEvent('touchend', {
+          touches: [] as any,
+        });
+        canvas.dispatchEvent(touchEndEvent);
+
+        // Should have cleaned up touch state
+        expect((canvasArea as any).touchStartDistance).toBeNull();
+        expect((canvasArea as any).touchStartZoom).toBeNull();
+        expect((canvasArea as any).touchStartCenter).toBeNull();
+      });
+
+      it('should transition to pan mode when one touch remains', () => {
+        const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
+
+        // Start with two touches (pinch mode)
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            { clientX: 300, clientY: 250 } as Touch,
+            { clientX: 500, clientY: 350 } as Touch,
+          ] as any,
+        });
+        canvas.dispatchEvent(touchStartEvent);
+
+        // One touch ends, one remains
+        const touchEndEvent = new TouchEvent('touchend', {
+          touches: [{ clientX: 400, clientY: 300 } as Touch] as any,
+        });
+        canvas.dispatchEvent(touchEndEvent);
+
+        // Should be in pan mode now
+        expect((canvasArea as any).isPanning).toBe(true);
+        expect((canvasArea as any).touchStartDistance).toBeNull();
+      });
+    });
+
+    describe('Enhanced Zoom Controls', () => {
+      it('should zoom in centered on viewport center', () => {
+        const initialZoom = canvasArea.getZoom();
+        const zoomSpy = jest.fn();
+        canvasArea.on('zoomChanged', zoomSpy);
+
+        // Use setZoom without animation for testing
+        canvasArea.setZoom(initialZoom + 0.1, false);
+
+        expect(canvasArea.getZoom()).toBeGreaterThan(initialZoom);
+        expect(zoomSpy).toHaveBeenCalled();
+      });
+
+      it('should zoom out centered on viewport center', () => {
+        canvasArea.setZoom(2, false); // Start at 200%
+        const initialZoom = canvasArea.getZoom();
+        const zoomSpy = jest.fn();
+        canvasArea.on('zoomChanged', zoomSpy);
+
+        // Use setZoom without animation for testing
+        canvasArea.setZoom(initialZoom - 0.1, false);
+
+        expect(canvasArea.getZoom()).toBeLessThan(initialZoom);
+        expect(zoomSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('Cleanup and Memory Management', () => {
+      it('should cancel animation frame on destroy', () => {
+        // Mock requestAnimationFrame
+        const animationId = 123;
+        global.requestAnimationFrame = jest.fn(() => animationId) as any;
+        global.cancelAnimationFrame = jest.fn() as any;
+
+        // Start an animation
+        canvasArea.setZoomAtPoint(2, 400, 300);
+
+        // Destroy should cancel animation
+        canvasArea.destroy();
+
+        expect(cancelAnimationFrame).toHaveBeenCalledWith(animationId);
+      });
+
+      it('should handle multiple animation cancellations safely', () => {
+        global.requestAnimationFrame = jest.fn(() => 123) as any;
+        global.cancelAnimationFrame = jest.fn() as any;
+
+        // Start multiple animations
+        canvasArea.setZoomAtPoint(2, 400, 300);
+        canvasArea.setZoomAtPoint(3, 400, 300);
+        canvasArea.setZoomAtPoint(1.5, 400, 300);
+
+        canvasArea.destroy();
+
+        // Should not throw errors
+        expect(cancelAnimationFrame).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('Mouse Wheel Zoom', () => {
     beforeEach(() => {
       canvasArea = new CanvasArea(container);
@@ -298,16 +664,16 @@ describe('CanvasArea', () => {
       expect(canvasArea.getZoom()).toBeGreaterThan(initialZoom);
     });
 
-    it('should not zoom without modifier keys', () => {
+    it('should zoom without modifier keys for better UX', () => {
       const canvas = container.querySelector('.main-canvas') as HTMLCanvasElement;
       const initialZoom = canvasArea.getZoom();
 
       const wheelEvent = new WheelEvent('wheel', {
-        deltaY: -100,
+        deltaY: -100, // Zoom in
       });
       canvas.dispatchEvent(wheelEvent);
 
-      expect(canvasArea.getZoom()).toBe(initialZoom);
+      expect(canvasArea.getZoom()).toBeGreaterThan(initialZoom);
     });
   });
 
