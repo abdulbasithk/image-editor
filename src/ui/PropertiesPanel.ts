@@ -366,6 +366,96 @@ export class PropertiesPanel extends EventEmitter {
         ],
       },
     ],
+    [
+      'brightness',
+      {
+        toolId: 'brightness',
+        toolName: 'Brightness Adjustment',
+        groups: [
+          {
+            id: 'brightness-adjustment',
+            title: 'Brightness',
+            icon: '☀️',
+            controls: [
+              {
+                id: 'brightness',
+                type: 'slider',
+                label: 'Brightness',
+                value: 0,
+                min: -100,
+                max: 100,
+                step: 1,
+                tooltip: 'Adjust image brightness (-100 to +100)',
+              },
+              {
+                id: 'preview',
+                type: 'checkbox',
+                label: 'Real-time Preview',
+                value: false,
+                tooltip: 'Enable real-time preview of brightness changes',
+              },
+              {
+                id: 'reset',
+                type: 'button',
+                label: 'Reset',
+                tooltip: 'Reset brightness to 0',
+              },
+              {
+                id: 'apply',
+                type: 'button',
+                label: 'Apply',
+                tooltip: 'Apply brightness adjustment permanently',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      'contrast',
+      {
+        toolId: 'contrast',
+        toolName: 'Contrast Adjustment',
+        groups: [
+          {
+            id: 'contrast-adjustment',
+            title: 'Contrast',
+            icon: '◑',
+            controls: [
+              {
+                id: 'contrast',
+                type: 'slider',
+                label: 'Contrast',
+                value: 0,
+                min: -100,
+                max: 100,
+                step: 1,
+                tooltip: 'Adjust image contrast (-100 to +100)',
+              },
+              {
+                id: 'preview',
+                type: 'checkbox',
+                label: 'Real-time Preview',
+                value: false,
+                tooltip: 'Enable real-time preview of contrast changes',
+              },
+              {
+                id: 'reset',
+                type: 'button',
+                label: 'Reset',
+                tooltip: 'Reset contrast to 0',
+              },
+              {
+                id: 'apply',
+                type: 'button',
+                label: 'Apply',
+                tooltip: 'Apply contrast adjustment permanently',
+              },
+            ],
+          },
+        ],
+      },
+    ],
   ]);
 
   constructor(container: HTMLElement, config: PropertiesPanelConfig = {}) {

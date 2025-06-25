@@ -105,6 +105,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       brush: 'Brush Tool',
       text: 'Text Tool',
       shapes: 'Shapes Tool',
+      brightness: 'Brightness Tool',
+      contrast: 'Contrast Tool',
+      saturation: 'Saturation Tool',
+      hue: 'Hue Tool',
     };
 
     currentToolDisplay.textContent = toolNames[currentTool] || 'Unknown Tool';
@@ -127,6 +131,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
       case 'text':
         createTextProperties();
+        break;
+      case 'brightness':
+        createBrightnessProperties();
+        break;
+      case 'contrast':
+        createContrastProperties();
+        break;
+      case 'saturation':
+        createSaturationProperties();
+        break;
+      case 'hue':
+        createHueProperties();
         break;
       default:
         toolPropertiesContent.innerHTML = `<p style="color: #718096; font-size: 0.9rem; text-align: center; margin: 2rem 0;">No properties for ${currentTool} tool</p>`;
@@ -273,6 +289,286 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (fontSizeSlider && fontSizeValue) {
       fontSizeSlider.addEventListener('input', () => {
         fontSizeValue.textContent = `${fontSizeSlider.value}px`;
+      });
+    }
+  }
+
+  function createBrightnessProperties() {
+    toolPropertiesContent.innerHTML = `
+      <div class="demo-property-control">
+        <label class="demo-property-label">Brightness</label>
+        <input type="range" class="demo-property-slider" min="-100" max="100" value="0" id="brightness-slider">
+        <span id="brightness-value">0</span>
+      </div>
+      <div class="demo-property-control">
+        <label class="demo-property-checkbox">
+          <input type="checkbox" id="brightness-preview">
+          <span>Real-time Preview</span>
+        </label>
+      </div>
+      <div class="demo-property-control">
+        <button class="demo-btn demo-btn-secondary" id="brightness-reset">Reset</button>
+        <button class="demo-btn demo-btn-primary" id="brightness-apply">Apply</button>
+      </div>
+    `;
+
+    // Add event listeners
+    const brightnessSlider = document.getElementById('brightness-slider') as HTMLInputElement;
+    const brightnessValue = document.getElementById('brightness-value') as HTMLElement;
+    const brightnessPreview = document.getElementById('brightness-preview') as HTMLInputElement;
+    const brightnessReset = document.getElementById('brightness-reset') as HTMLButtonElement;
+    const brightnessApply = document.getElementById('brightness-apply') as HTMLButtonElement;
+
+    if (brightnessSlider && brightnessValue) {
+      brightnessSlider.addEventListener('input', () => {
+        const value = parseInt(brightnessSlider.value);
+        brightnessValue.textContent = value.toString();
+
+        // Trigger brightness change in tool
+        const brightnessTool = editor.getTool('brightness');
+        if (brightnessTool && typeof (brightnessTool as any).onPropertyChanged === 'function') {
+          (brightnessTool as any).onPropertyChanged('brightness', value);
+        }
+      });
+    }
+
+    if (brightnessPreview) {
+      brightnessPreview.addEventListener('change', () => {
+        const brightnessTool = editor.getTool('brightness');
+        if (brightnessTool && typeof (brightnessTool as any).onPropertyChanged === 'function') {
+          (brightnessTool as any).onPropertyChanged('preview', brightnessPreview.checked);
+        }
+      });
+    }
+
+    if (brightnessReset) {
+      brightnessReset.addEventListener('click', () => {
+        brightnessSlider.value = '0';
+        brightnessValue.textContent = '0';
+        const brightnessTool = editor.getTool('brightness');
+        if (brightnessTool && typeof (brightnessTool as any).onPropertyChanged === 'function') {
+          (brightnessTool as any).onPropertyChanged('reset', true);
+        }
+      });
+    }
+
+    if (brightnessApply) {
+      brightnessApply.addEventListener('click', () => {
+        const brightnessTool = editor.getTool('brightness');
+        if (brightnessTool && typeof (brightnessTool as any).onPropertyChanged === 'function') {
+          (brightnessTool as any).onPropertyChanged('apply', true);
+        }
+        updateStatus('Brightness adjustment applied');
+      });
+    }
+  }
+
+  function createContrastProperties() {
+    toolPropertiesContent.innerHTML = `
+      <div class="demo-property-control">
+        <label class="demo-property-label">Contrast</label>
+        <input type="range" class="demo-property-slider" min="-100" max="100" value="0" id="contrast-slider">
+        <span id="contrast-value">0</span>
+      </div>
+      <div class="demo-property-control">
+        <label class="demo-property-checkbox">
+          <input type="checkbox" id="contrast-preview">
+          <span>Real-time Preview</span>
+        </label>
+      </div>
+      <div class="demo-property-control">
+        <button class="demo-btn demo-btn-secondary" id="contrast-reset">Reset</button>
+        <button class="demo-btn demo-btn-primary" id="contrast-apply">Apply</button>
+      </div>
+    `;
+
+    // Add event listeners
+    const contrastSlider = document.getElementById('contrast-slider') as HTMLInputElement;
+    const contrastValue = document.getElementById('contrast-value') as HTMLElement;
+    const contrastPreview = document.getElementById('contrast-preview') as HTMLInputElement;
+    const contrastReset = document.getElementById('contrast-reset') as HTMLButtonElement;
+    const contrastApply = document.getElementById('contrast-apply') as HTMLButtonElement;
+
+    if (contrastSlider && contrastValue) {
+      contrastSlider.addEventListener('input', () => {
+        const value = parseInt(contrastSlider.value);
+        contrastValue.textContent = value.toString();
+
+        // Trigger contrast change in tool
+        const contrastTool = editor.getTool('contrast');
+        if (contrastTool && typeof (contrastTool as any).onPropertyChanged === 'function') {
+          (contrastTool as any).onPropertyChanged('contrast', value);
+        }
+      });
+    }
+
+    if (contrastPreview) {
+      contrastPreview.addEventListener('change', () => {
+        const contrastTool = editor.getTool('contrast');
+        if (contrastTool && typeof (contrastTool as any).onPropertyChanged === 'function') {
+          (contrastTool as any).onPropertyChanged('preview', contrastPreview.checked);
+        }
+      });
+    }
+
+    if (contrastReset) {
+      contrastReset.addEventListener('click', () => {
+        contrastSlider.value = '0';
+        contrastValue.textContent = '0';
+        const contrastTool = editor.getTool('contrast');
+        if (contrastTool && typeof (contrastTool as any).onPropertyChanged === 'function') {
+          (contrastTool as any).onPropertyChanged('reset', true);
+        }
+      });
+    }
+
+    if (contrastApply) {
+      contrastApply.addEventListener('click', () => {
+        const contrastTool = editor.getTool('contrast');
+        if (contrastTool && typeof (contrastTool as any).onPropertyChanged === 'function') {
+          (contrastTool as any).onPropertyChanged('apply', true);
+        }
+        updateStatus('Contrast adjustment applied');
+      });
+    }
+  }
+
+  function createSaturationProperties() {
+    toolPropertiesContent.innerHTML = `
+      <div class="demo-property-control">
+        <label class="demo-property-label">Saturation</label>
+        <input type="range" class="demo-property-slider" min="-100" max="100" value="0" id="saturation-slider">
+        <span id="saturation-value">0</span>
+      </div>
+      <div class="demo-property-control">
+        <label class="demo-property-checkbox">
+          <input type="checkbox" id="saturation-preview">
+          <span>Real-time Preview</span>
+        </label>
+      </div>
+      <div class="demo-property-control">
+        <button class="demo-btn demo-btn-secondary" id="saturation-reset">Reset</button>
+        <button class="demo-btn demo-btn-primary" id="saturation-apply">Apply</button>
+      </div>
+    `;
+
+    // Add event listeners
+    const saturationSlider = document.getElementById('saturation-slider') as HTMLInputElement;
+    const saturationValue = document.getElementById('saturation-value') as HTMLElement;
+    const saturationPreview = document.getElementById('saturation-preview') as HTMLInputElement;
+    const saturationReset = document.getElementById('saturation-reset') as HTMLButtonElement;
+    const saturationApply = document.getElementById('saturation-apply') as HTMLButtonElement;
+
+    if (saturationSlider && saturationValue) {
+      saturationSlider.addEventListener('input', () => {
+        const value = parseInt(saturationSlider.value);
+        saturationValue.textContent = value.toString();
+
+        // Trigger saturation change in tool
+        const saturationTool = editor.getTool('saturation');
+        if (saturationTool && typeof (saturationTool as any).onPropertyChanged === 'function') {
+          (saturationTool as any).onPropertyChanged('saturation', value);
+        }
+      });
+    }
+
+    if (saturationPreview) {
+      saturationPreview.addEventListener('change', () => {
+        const saturationTool = editor.getTool('saturation');
+        if (saturationTool && typeof (saturationTool as any).onPropertyChanged === 'function') {
+          (saturationTool as any).onPropertyChanged('preview', saturationPreview.checked);
+        }
+      });
+    }
+
+    if (saturationReset) {
+      saturationReset.addEventListener('click', () => {
+        saturationSlider.value = '0';
+        saturationValue.textContent = '0';
+        const saturationTool = editor.getTool('saturation');
+        if (saturationTool && typeof (saturationTool as any).onPropertyChanged === 'function') {
+          (saturationTool as any).onPropertyChanged('reset', true);
+        }
+      });
+    }
+
+    if (saturationApply) {
+      saturationApply.addEventListener('click', () => {
+        const saturationTool = editor.getTool('saturation');
+        if (saturationTool && typeof (saturationTool as any).onPropertyChanged === 'function') {
+          (saturationTool as any).onPropertyChanged('apply', true);
+        }
+        updateStatus('Saturation adjustment applied');
+      });
+    }
+  }
+
+  function createHueProperties() {
+    toolPropertiesContent.innerHTML = `
+      <div class="demo-property-control">
+        <label class="demo-property-label">Hue</label>
+        <input type="range" class="demo-property-slider" min="-180" max="180" value="0" id="hue-slider">
+        <span id="hue-value">0°</span>
+      </div>
+      <div class="demo-property-control">
+        <label class="demo-property-checkbox">
+          <input type="checkbox" id="hue-preview">
+          <span>Real-time Preview</span>
+        </label>
+      </div>
+      <div class="demo-property-control">
+        <button class="demo-btn demo-btn-secondary" id="hue-reset">Reset</button>
+        <button class="demo-btn demo-btn-primary" id="hue-apply">Apply</button>
+      </div>
+    `;
+
+    // Add event listeners
+    const hueSlider = document.getElementById('hue-slider') as HTMLInputElement;
+    const hueValue = document.getElementById('hue-value') as HTMLElement;
+    const huePreview = document.getElementById('hue-preview') as HTMLInputElement;
+    const hueReset = document.getElementById('hue-reset') as HTMLButtonElement;
+    const hueApply = document.getElementById('hue-apply') as HTMLButtonElement;
+
+    if (hueSlider && hueValue) {
+      hueSlider.addEventListener('input', () => {
+        const value = parseInt(hueSlider.value);
+        hueValue.textContent = value + '°';
+
+        // Trigger hue change in tool
+        const hueTool = editor.getTool('hue');
+        if (hueTool && typeof (hueTool as any).onPropertyChanged === 'function') {
+          (hueTool as any).onPropertyChanged('hue', value);
+        }
+      });
+    }
+
+    if (huePreview) {
+      huePreview.addEventListener('change', () => {
+        const hueTool = editor.getTool('hue');
+        if (hueTool && typeof (hueTool as any).onPropertyChanged === 'function') {
+          (hueTool as any).onPropertyChanged('preview', huePreview.checked);
+        }
+      });
+    }
+
+    if (hueReset) {
+      hueReset.addEventListener('click', () => {
+        hueSlider.value = '0';
+        hueValue.textContent = '0°';
+        const hueTool = editor.getTool('hue');
+        if (hueTool && typeof (hueTool as any).onPropertyChanged === 'function') {
+          (hueTool as any).onPropertyChanged('reset', true);
+        }
+      });
+    }
+
+    if (hueApply) {
+      hueApply.addEventListener('click', () => {
+        const hueTool = editor.getTool('hue');
+        if (hueTool && typeof (hueTool as any).onPropertyChanged === 'function') {
+          (hueTool as any).onPropertyChanged('apply', true);
+        }
+        updateStatus('Hue adjustment applied');
       });
     }
   }

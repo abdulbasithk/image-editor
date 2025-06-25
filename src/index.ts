@@ -45,12 +45,14 @@ export type {
 
 // Basic Commands
 export { DrawCommand, ClearCanvasCommand, TextCommand } from './commands/BasicCommands';
+export { BrightnessCommand } from './commands/BrightnessCommand';
 
 // Tools
 export { CropTool } from './tools/CropTool';
 export { ResizeTool } from './tools/ResizeTool';
 export { RotationTool } from './tools/RotationTool';
 export { SelectionTool } from './tools/SelectionTool';
+export { BrightnessAdjustmentTool } from './tools/BrightnessAdjustmentTool';
 export type { SelectionArea, SelectionOptions } from './tools/SelectionTool';
 
 // Plugins

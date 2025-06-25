@@ -12,6 +12,10 @@ import { ContainerManager, ContainerConfig, ResizeEvent } from './ContainerManag
 import { ResizeTool } from '../tools/ResizeTool';
 import { RotationTool } from '../tools/RotationTool';
 import { SelectionTool } from '../tools/SelectionTool';
+import { BrightnessAdjustmentTool } from '../tools/BrightnessAdjustmentTool';
+import { ContrastAdjustmentTool } from '../tools/ContrastAdjustmentTool';
+import { SaturationAdjustmentTool } from '../tools/SaturationAdjustmentTool';
+import { HueAdjustmentTool } from '../tools/HueAdjustmentTool';
 
 export class ImageEditor {
   private config: ImageEditorConfig;
@@ -95,6 +99,10 @@ export class ImageEditor {
     this.tools.set('resize', new ResizeTool(this, this.canvasManager));
     this.tools.set('rotation', new RotationTool(this, this.canvasManager));
     this.tools.set('selection', new SelectionTool(this, this.canvasManager));
+    this.tools.set('brightness', new BrightnessAdjustmentTool(this, this.canvasManager));
+    this.tools.set('contrast', new ContrastAdjustmentTool(this, this.canvasManager));
+    this.tools.set('saturation', new SaturationAdjustmentTool(this));
+    this.tools.set('hue', new HueAdjustmentTool(this));
 
     // Setup event delegation for tool interactions
     this.setupEventDelegation();
@@ -180,6 +188,17 @@ export class ImageEditor {
     this.eventEmitter.on('shortcut:pressed', (data: { shortcut: string; event: KeyboardEvent }) => {
       this.handleShortcut(data.shortcut, data.event);
     });
+
+    // Handle tool property changes
+    this.eventEmitter.on(
+      'propertyChanged',
+      (data: { toolId: string; controlId: string; value: any }) => {
+        const tool = this.tools.get(data.toolId);
+        if (tool && typeof (tool as any).onPropertyChanged === 'function') {
+          (tool as any).onPropertyChanged(data.controlId, data.value);
+        }
+      },
+    );
   }
 
   private handleShortcut(shortcut: string, event: KeyboardEvent): void {

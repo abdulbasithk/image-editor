@@ -460,9 +460,6 @@ export class ContainerManager {
   private handleThemeChange(event: ThemeChangeEvent): void {
     // Update config
     this.config.theme = event.mode;
-
-    // You can emit events here for other parts of the application
-    console.debug('Theme changed:', event);
   }
 
   /**
