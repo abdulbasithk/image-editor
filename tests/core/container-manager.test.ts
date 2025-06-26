@@ -10,6 +10,10 @@ describe('ContainerManager', () => {
   beforeEach(() => {
     container = createMockContainer();
     canvas = createMockCanvas();
+
+    // Ensure canvas is a valid DOM Node
+    document.body.appendChild(canvas);
+
     resizeCallback = jest.fn();
 
     // Mock ResizeObserver
@@ -468,6 +472,238 @@ describe('ContainerManager', () => {
       expect(elements.content.contains(elements.canvasArea)).toBe(true);
       expect(elements.canvasArea.contains(elements.canvasContainer)).toBe(true);
       expect(elements.canvasContainer.contains(elements.canvas)).toBe(true);
+    });
+  });
+
+  describe('Additional Coverage and Edge Cases', () => {
+    let container: HTMLElement;
+    let canvas: HTMLCanvasElement;
+    let containerManager: ContainerManager;
+
+    beforeEach(() => {
+      container = createMockContainer();
+      canvas = createMockCanvas();
+      document.body.appendChild(canvas);
+    });
+
+    afterEach(() => {
+      if (containerManager) containerManager.destroy();
+      jest.clearAllMocks();
+    });
+
+    it('should allow destroy to be called multiple times safely', () => {
+      containerManager = new ContainerManager(container, canvas);
+      expect(() => {
+        containerManager.destroy();
+        containerManager.destroy();
+      }).not.toThrow();
+    });
+
+    it('should not throw when calling public methods after destroy', () => {
+      containerManager = new ContainerManager(container, canvas);
+      containerManager.destroy();
+      expect(() => {
+        containerManager.setSize(100, 100);
+        containerManager.togglePanel();
+        containerManager.setLoading(true);
+        containerManager.setTitle('After Destroy');
+        containerManager.getElements();
+        containerManager.getSize();
+      }).not.toThrow();
+    });
+
+    it('should handle missing container gracefully', () => {
+      expect(() => {
+        // @ts-expect-error purposely passing null
+        new ContainerManager(null, canvas);
+      }).toThrow();
+    });
+
+    it('should not toggle panel if already in desired state', () => {
+      containerManager = new ContainerManager(container, canvas);
+      const elements = containerManager.getElements();
+      containerManager.togglePanel(false);
+      expect(elements.panel?.classList.contains('collapsed')).toBe(true);
+      // Toggling again to false should not change state or throw
+      expect(() => containerManager.togglePanel(false)).not.toThrow();
+    });
+
+    it('should handle invalid theme value gracefully', () => {
+      containerManager = new ContainerManager(container, canvas);
+      // @ts-expect-error purposely passing invalid theme
+      expect(() => containerManager.setTheme('invalid-theme')).not.toThrow();
+      // Should fallback to default or ignore
+      expect(container.getAttribute('data-theme')).toBeDefined();
+    });
+
+    it('should handle invalid size values', () => {
+      containerManager = new ContainerManager(container, canvas);
+      containerManager.setSize(-100, NaN);
+      const size = containerManager.getSize();
+      expect(size.width).toBeGreaterThanOrEqual(0);
+      expect(size.height).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should not call resize/move listeners after destroy', () => {
+      containerManager = new ContainerManager(container, canvas, { resizable: true });
+      const handle = container.querySelector('.image-editor-resize-handle.resize-right');
+      if (handle) {
+        const mouseEvent = new MouseEvent('mousedown', { clientX: 100, clientY: 100 });
+        handle.dispatchEvent(mouseEvent);
+        containerManager.destroy();
+        // Simulate move and up after destroy
+        const moveEvent = new MouseEvent('mousemove', { clientX: 120, clientY: 100 });
+        const upEvent = new MouseEvent('mouseup');
+        expect(() => {
+          document.dispatchEvent(moveEvent);
+          document.dispatchEvent(upEvent);
+        }).not.toThrow();
+      }
+    });
+  });
+
+  describe('ContainerManager - Full Branch and Edge Case Coverage', () => {
+    let container: HTMLElement;
+    let canvas: HTMLCanvasElement;
+    let containerManager: ContainerManager;
+
+    beforeEach(() => {
+      container = createMockContainer();
+      canvas = createMockCanvas();
+      document.body.appendChild(canvas);
+    });
+
+    afterEach(() => {
+      if (containerManager) containerManager.destroy();
+      jest.clearAllMocks();
+    });
+
+    it('should update responsive layout for all panel/toolbar layouts', () => {
+      containerManager = new ContainerManager(container, canvas, {
+        responsive: true,
+        showPanel: true,
+        showToolbar: true,
+      });
+      const elements = containerManager.getElements();
+      // Mock responsiveManager and layouts
+      const responsiveManager = (containerManager as any).responsiveManager;
+      jest.spyOn(responsiveManager, 'getPanelLayout').mockReturnValue('bottom');
+      jest.spyOn(responsiveManager, 'getToolbarLayout').mockReturnValue('side');
+      containerManager['updateResponsiveLayout']();
+      expect(elements.panel?.getAttribute('data-layout')).toBe('bottom');
+      expect(elements.panel?.classList.contains('properties-panel--mobile')).toBe(true);
+      expect(elements.toolbar?.getAttribute('data-layout')).toBe('side');
+      expect(elements.container.getAttribute('data-panel-layout')).toBe('bottom');
+      expect(elements.container.getAttribute('data-toolbar-layout')).toBe('side');
+      // Test non-bottom panel layout
+      jest.spyOn(responsiveManager, 'getPanelLayout').mockReturnValue('side');
+      containerManager['updateResponsiveLayout']();
+      expect(elements.panel?.classList.contains('properties-panel--mobile')).toBe(false);
+    });
+
+    it('should auto-collapse and expand panels for mobile/desktop', () => {
+      containerManager = new ContainerManager(container, canvas, {
+        responsive: true,
+        showPanel: true,
+      });
+      const elements = containerManager.getElements();
+      const responsiveManager = (containerManager as any).responsiveManager;
+      // Mobile: should collapse
+      jest.spyOn(responsiveManager, 'matches').mockReturnValue(true);
+      jest.spyOn(responsiveManager, 'shouldAutoCollapse').mockReturnValue(true);
+      containerManager['autoCollapsePanelsForMobile']();
+      expect(elements.panel?.classList.contains('collapsed')).toBe(true);
+      // Desktop: should expand
+      containerManager['expandPanelsForDesktop']();
+      expect(elements.panel?.classList.contains('collapsed')).toBe(false);
+    });
+
+    it('should setup mobile landscape layout', () => {
+      containerManager = new ContainerManager(container, canvas, { showPanel: true });
+      const elements = containerManager.getElements();
+      containerManager['setupMobileLandscapeLayout']();
+      expect(elements.panel?.style.position).toBe('fixed');
+      expect(elements.panel?.style.width).toBe('280px');
+    });
+
+    it('should update canvas for breakpoint', () => {
+      containerManager = new ContainerManager(container, canvas, { responsive: true });
+      const elements = containerManager.getElements();
+      const responsiveManager = (containerManager as any).responsiveManager;
+      jest
+        .spyOn(responsiveManager, 'getOptimalCanvasSize')
+        .mockReturnValue({ width: 123, height: 456 });
+      containerManager['updateCanvasForBreakpoint']();
+      expect(elements.canvasContainer.style.maxWidth).toBe('123px');
+      expect(elements.canvasContainer.style.maxHeight).toBe('456px');
+    });
+
+    it('should handle breakpoint/orientation event handlers', () => {
+      containerManager = new ContainerManager(container, canvas, {
+        responsive: true,
+        showPanel: true,
+      });
+      const elements = containerManager.getElements();
+      const responsiveManager = (containerManager as any).responsiveManager;
+      // Mobile: should collapse panel
+      jest.spyOn(responsiveManager, 'matches').mockReturnValue(true);
+      jest.spyOn(responsiveManager, 'shouldAutoCollapse').mockReturnValue(true);
+      containerManager['handleBreakpointChange']('mobile');
+      expect(elements.panel?.classList.contains('collapsed')).toBe(true);
+      // Desktop: should expand panel
+      jest.spyOn(responsiveManager, 'matches').mockReturnValue(false);
+      containerManager['handleBreakpointChange']('desktop');
+      expect(elements.panel?.classList.contains('collapsed')).toBe(false);
+      // Orientation: landscape (mobile)
+      jest.spyOn(responsiveManager, 'matches').mockReturnValue(true);
+      containerManager['handleOrientationChange']('landscape');
+      expect(elements.panel?.style.position).toBe('fixed');
+      // Orientation: portrait (should not change position)
+      elements.panel!.style.position = '';
+      containerManager['handleOrientationChange']('portrait');
+      expect(elements.panel?.style.position).toBe('');
+    });
+
+    it('should not fail if panel/toolbar elements are missing in layout updates', () => {
+      containerManager = new ContainerManager(container, canvas, {
+        showPanel: false,
+        showToolbar: false,
+      });
+      // Should not throw
+      expect(() => containerManager['updateResponsiveLayout']()).not.toThrow();
+      expect(() => containerManager['autoCollapsePanelsForMobile']()).not.toThrow();
+      expect(() => containerManager['expandPanelsForDesktop']()).not.toThrow();
+      expect(() => containerManager['setupMobileLandscapeLayout']()).not.toThrow();
+    });
+
+    it('should not fail if responsiveManager is missing in responsive methods', () => {
+      containerManager = new ContainerManager(container, canvas, { responsive: false });
+      // Should not throw
+      expect(() => containerManager['updateResponsiveLayout']()).not.toThrow();
+      expect(() => containerManager['autoCollapsePanelsForMobile']()).not.toThrow();
+      expect(() => containerManager['handleBreakpointChange']('mobile')).not.toThrow();
+      expect(() => containerManager['handleOrientationChange']('portrait')).not.toThrow();
+      expect(() => containerManager['updateCanvasForBreakpoint']()).not.toThrow();
+    });
+
+    it('should not fail if themeManager is missing in setTheme/destroy', () => {
+      containerManager = new ContainerManager(container, canvas);
+      // Remove themeManager
+      (containerManager as any).themeManager = undefined;
+      expect(() => containerManager.setTheme('dark')).not.toThrow();
+      expect(() => containerManager.destroy()).not.toThrow();
+    });
+
+    it('should not fail if responsiveManager is missing in destroy', () => {
+      containerManager = new ContainerManager(container, canvas);
+      (containerManager as any).responsiveManager = undefined;
+      expect(() => containerManager.destroy()).not.toThrow();
+    });
+
+    it('should not fail if resizeObserver is missing in destroy', () => {
+      containerManager = new ContainerManager(container, canvas);
+      (containerManager as any).resizeObserver = undefined;
+      expect(() => containerManager.destroy()).not.toThrow();
     });
   });
 });

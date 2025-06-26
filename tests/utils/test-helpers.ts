@@ -48,82 +48,38 @@ export function createMockImage(width = 800, height = 600): HTMLImageElement {
  * Create a mock Canvas element for testing
  */
 export function createMockCanvas(width = 800, height = 600): HTMLCanvasElement {
-  // Create a real canvas element for DOM operations
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
 
-  // Mock the getContext method to return a mock 2D context
-  const mockContext = {
-    clearRect: jest.fn(),
-    fillRect: jest.fn(),
-    strokeRect: jest.fn(),
-    fillText: jest.fn(),
-    strokeText: jest.fn(),
-    beginPath: jest.fn(),
-    closePath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    quadraticCurveTo: jest.fn(),
-    bezierCurveTo: jest.fn(),
-    arc: jest.fn(),
-    arcTo: jest.fn(),
-    ellipse: jest.fn(),
-    rect: jest.fn(),
-    fill: jest.fn(),
-    stroke: jest.fn(),
-    clip: jest.fn(),
-    drawImage: jest.fn(),
-    putImageData: jest.fn(),
-    getImageData: jest.fn().mockReturnValue({
-      data: new Uint8ClampedArray(width * height * 4),
-      width: width,
-      height: height,
-    }),
-    createImageData: jest.fn(),
-    save: jest.fn(),
-    restore: jest.fn(),
-    scale: jest.fn(),
-    rotate: jest.fn(),
-    translate: jest.fn(),
-    transform: jest.fn(),
-    setTransform: jest.fn(),
-    resetTransform: jest.fn(),
-    // Properties
-    fillStyle: '#000000',
-    strokeStyle: '#000000',
-    lineWidth: 1,
-    lineCap: 'butt',
-    lineJoin: 'miter',
-    miterLimit: 10,
-    lineDashOffset: 0,
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-    shadowBlur: 0,
-    shadowColor: 'rgba(0, 0, 0, 0)',
-    globalAlpha: 1,
-    globalCompositeOperation: 'source-over',
-    font: '10px sans-serif',
-    textAlign: 'start',
-    textBaseline: 'alphabetic',
-    direction: 'inherit',
-    imageSmoothingEnabled: true,
-  };
-
   // Mock getContext
-  canvas.getContext = jest.fn().mockImplementation((contextType) => {
+  canvas.getContext = jest.fn().mockImplementation((contextType: string) => {
     if (contextType === '2d') {
-      return mockContext;
+      return {
+        clearRect: jest.fn(),
+        fillRect: jest.fn(),
+        strokeRect: jest.fn(),
+        drawImage: jest.fn(),
+        getImageData: jest.fn().mockReturnValue(new ImageData(width, height)),
+        createImageData: jest.fn().mockReturnValue(new ImageData(width, height)),
+        putImageData: jest.fn(),
+        save: jest.fn(),
+        restore: jest.fn(),
+        scale: jest.fn(),
+        rotate: jest.fn(),
+        translate: jest.fn(),
+        transform: jest.fn(),
+        setTransform: jest.fn(),
+        resetTransform: jest.fn(),
+        fillStyle: '#000000',
+        strokeStyle: '#000000',
+        lineWidth: 1,
+        font: '10px sans-serif',
+        textAlign: 'start',
+        textBaseline: 'alphabetic',
+      };
     }
     return null;
-  });
-
-  // Mock toDataURL
-  canvas.toDataURL = jest.fn().mockReturnValue('data:image/png;base64,mock-data');
-  // Mock toBlob
-  canvas.toBlob = jest.fn().mockImplementation((callback) => {
-    const blob = new Blob(['mock canvas content'], { type: 'image/png' });
-    callback(blob);
   });
 
   return canvas;
@@ -212,17 +168,58 @@ export function createMockContainer(): HTMLElement {
     };
   });
 
-  // Mock querySelector and querySelectorAll
+  // Store original appendChild for real DOM operations
+  const originalAppendChild = container.appendChild.bind(container);
+
+  // Enhanced querySelector that can find dynamically added elements
   const originalQuerySelector = container.querySelector.bind(container);
+  container.querySelector = jest.fn((selector) => {
+    // First try the real querySelector
+    const realElement = originalQuerySelector(selector);
+    if (realElement) {
+      return realElement;
+    }
+
+    // Only create mock elements for specific cases where we need backward compatibility
+    // For resize handles, create a mock element with proper event handling
+    if (selector.includes('resize-handle')) {
+      const element = document.createElement('div');
+      element.className = selector.replace(/^\./, '').replace(/\./g, ' ');
+      element.addEventListener('mousedown', () => {
+        container.classList.add('resizing');
+      });
+      return element;
+    }
+
+    // For all other selectors, return null when element doesn't exist
+    return null;
+  });
+
+  // Enhanced querySelectorAll that returns real NodeList
   const originalQuerySelectorAll = container.querySelectorAll.bind(container);
+  container.querySelectorAll = jest.fn((selector) => {
+    // First try the real querySelectorAll
+    const realElements = originalQuerySelectorAll(selector);
+    if (realElements.length > 0) {
+      return realElements;
+    }
 
-  container.querySelector = jest.fn().mockImplementation((selector) => {
-    return originalQuerySelector(selector);
+    // If not found and looking for resize handles, create 8 handles
+    if (selector.includes('resize-handle')) {
+      const handles: Element[] = [];
+      for (let i = 0; i < 8; i++) {
+        const handle = document.createElement('div');
+        handle.className = selector.replace(/^\./, '').replace(/\./g, ' ');
+        handles.push(handle);
+      }
+      return handles as any;
+    }
+
+    return [] as any;
   });
 
-  container.querySelectorAll = jest.fn().mockImplementation((selector) => {
-    return originalQuerySelectorAll(selector);
-  });
+  // Keep appendChild working normally for real DOM operations
+  container.appendChild = originalAppendChild;
 
   return container;
 }

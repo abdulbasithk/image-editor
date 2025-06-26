@@ -46,6 +46,12 @@ export type {
 // Basic Commands
 export { DrawCommand, ClearCanvasCommand, TextCommand } from './commands/BasicCommands';
 export { BrightnessCommand } from './commands/BrightnessCommand';
+export { ContrastCommand } from './commands/ContrastCommand';
+export { SaturationCommand } from './commands/SaturationCommand';
+export { HueCommand } from './commands/HueCommand';
+export { RGBCommand } from './commands/RGBCommand';
+export { AutoEnhanceCommand } from './commands/AutoEnhanceCommand';
+export type { AutoEnhanceAnalysis } from './commands/AutoEnhanceCommand';
 
 // Tools
 export { CropTool } from './tools/CropTool';
@@ -53,6 +59,11 @@ export { ResizeTool } from './tools/ResizeTool';
 export { RotationTool } from './tools/RotationTool';
 export { SelectionTool } from './tools/SelectionTool';
 export { BrightnessAdjustmentTool } from './tools/BrightnessAdjustmentTool';
+export { ContrastAdjustmentTool } from './tools/ContrastAdjustmentTool';
+export { SaturationAdjustmentTool } from './tools/SaturationAdjustmentTool';
+export { HueAdjustmentTool } from './tools/HueAdjustmentTool';
+export { RGBAdjustmentTool } from './tools/RGBAdjustmentTool';
+export { AutoEnhanceTool } from './tools/AutoEnhanceTool';
 export type { SelectionArea, SelectionOptions } from './tools/SelectionTool';
 
 // Plugins

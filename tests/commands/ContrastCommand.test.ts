@@ -190,4 +190,61 @@ describe('ContrastCommand', () => {
       }
     });
   });
+
+  describe('serialization', () => {
+    it('should serialize all relevant data', async () => {
+      const command = new ContrastCommand(editor, 42, 7);
+      await command.execute();
+      const data = command.serialize();
+      expect(data.data.contrastValue).toBe(42);
+      expect(data.data.previousContrastValue).toBe(7);
+      expect(typeof data.data.memoryUsage).toBe('number');
+    });
+  });
+
+  describe('merging', () => {
+    it('canMergeWith returns true for recent ContrastCommand', () => {
+      const command1 = new ContrastCommand(editor, 10, 0);
+      const command2 = new ContrastCommand(editor, 20, 10);
+      // Override timestamp for test
+      Object.defineProperty(command1, 'timestamp', { value: 1000 });
+      Object.defineProperty(command2, 'timestamp', { value: 1100 });
+      expect(command2.canMergeWith(command1)).toBe(true);
+    });
+    it('canMergeWith returns false for old ContrastCommand', () => {
+      const command1 = new ContrastCommand(editor, 10, 0);
+      const command2 = new ContrastCommand(editor, 20, 10);
+      Object.defineProperty(command1, 'timestamp', { value: 1000 });
+      Object.defineProperty(command2, 'timestamp', { value: 2000 });
+      expect(command2.canMergeWith(command1)).toBe(false);
+    });
+    it('canMergeWith returns false for non-ContrastCommand', () => {
+      const command = new ContrastCommand(editor, 10, 0);
+      expect(command.canMergeWith({ timestamp: Date.now() } as any)).toBe(false);
+    });
+    it('mergeWith returns merged command with correct before/after state (indirectly)', async () => {
+      const command1 = new ContrastCommand(editor, 10, 0);
+      const command2 = new ContrastCommand(editor, 20, 10);
+      await command1.execute();
+      await command2.execute();
+      const merged = command1.mergeWith(command2);
+      // The merged command should have the latest contrast value
+      expect(merged.getContrastValue()).toBe(20);
+      expect(merged.getPreviousContrastValue()).toBe(0);
+      // The merged command should undo to the original state
+      await merged.undo();
+      expect(mockContext.putImageData).toHaveBeenCalled();
+    });
+  });
+
+  describe('getters', () => {
+    it('getContrastValue returns the correct value', () => {
+      const command = new ContrastCommand(editor, 33, 11);
+      expect(command.getContrastValue()).toBe(33);
+    });
+    it('getPreviousContrastValue returns the correct value', () => {
+      const command = new ContrastCommand(editor, 33, 11);
+      expect(command.getPreviousContrastValue()).toBe(11);
+    });
+  });
 });

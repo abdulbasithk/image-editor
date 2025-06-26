@@ -74,6 +74,115 @@ describe('Event System', () => {
 
       consoleErrorSpy.mockRestore();
     });
+
+    it('should remove all listeners for an event', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      eventEmitter.on('test:event', callback1);
+      eventEmitter.on('test:event', callback2);
+      eventEmitter.off('test:event', callback1);
+      eventEmitter.off('test:event', callback2);
+      eventEmitter.emit('test:event', { data: 'test' });
+      expect(callback1).not.toHaveBeenCalled();
+      expect(callback2).not.toHaveBeenCalled();
+    });
+
+    it('should remove all listeners globally', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      eventEmitter.on('test:event', callback1);
+      eventEmitter.on('other:event', callback2);
+      eventEmitter.off('test:event', callback1);
+      eventEmitter.off('other:event', callback2);
+      eventEmitter.emit('test:event', { data: 'test' });
+      eventEmitter.emit('other:event', { data: 'other' });
+      expect(callback1).not.toHaveBeenCalled();
+      expect(callback2).not.toHaveBeenCalled();
+    });
+
+    it('should not throw when emitting an event with no listeners', () => {
+      expect(() => {
+        eventEmitter.emit('no:listeners', { data: 'test' });
+      }).not.toThrow();
+    });
+
+    it('should not throw when removing a listener that was never added', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      eventEmitter.on('test:event', callback1);
+      // Try to remove callback2, which was never added
+      expect(() => eventEmitter.off('test:event', callback2)).not.toThrow();
+      eventEmitter.emit('test:event', { data: 'test' });
+      expect(callback1).toHaveBeenCalled();
+      expect(callback2).not.toHaveBeenCalled();
+    });
+
+    it('should only remove one instance when the same callback is registered multiple times', () => {
+      const callback = jest.fn();
+      eventEmitter.on('test:event', callback);
+      eventEmitter.on('test:event', callback);
+      eventEmitter.off('test:event', callback); // Should remove only one
+      eventEmitter.emit('test:event', { data: 'test' });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle a listener that removes itself during emit', () => {
+      let callCount = 0;
+      function handler() {
+        callCount++;
+        eventEmitter.off('test:event', handler);
+      }
+      eventEmitter.on('test:event', handler);
+      eventEmitter.emit('test:event', { data: 1 });
+      eventEmitter.emit('test:event', { data: 2 });
+      // Should only be called once since it removes itself
+      expect(callCount).toBe(1);
+    });
+
+    it('should support removeAllListeners for specific event', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      eventEmitter.on('test:event', callback1);
+      eventEmitter.on('other:event', callback2);
+      eventEmitter.removeAllListeners('test:event');
+      eventEmitter.emit('test:event', { data: 'test' });
+      eventEmitter.emit('other:event', { data: 'other' });
+      expect(callback1).not.toHaveBeenCalled();
+      expect(callback2).toHaveBeenCalled();
+    });
+
+    it('should support removeAllListeners for all events', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      eventEmitter.on('test:event', callback1);
+      eventEmitter.on('other:event', callback2);
+      eventEmitter.removeAllListeners();
+      eventEmitter.emit('test:event', { data: 'test' });
+      eventEmitter.emit('other:event', { data: 'other' });
+      expect(callback1).not.toHaveBeenCalled();
+      expect(callback2).not.toHaveBeenCalled();
+    });
+
+    it('should return correct listener count', () => {
+      const callback1 = jest.fn();
+      const callback2 = jest.fn();
+      expect(eventEmitter.listenerCount('test:event')).toBe(0);
+      eventEmitter.on('test:event', callback1);
+      expect(eventEmitter.listenerCount('test:event')).toBe(1);
+      eventEmitter.on('test:event', callback2);
+      expect(eventEmitter.listenerCount('test:event')).toBe(2);
+      eventEmitter.off('test:event', callback1);
+      expect(eventEmitter.listenerCount('test:event')).toBe(1);
+    });
+
+    it('should return event names', () => {
+      expect(eventEmitter.eventNames()).toEqual([]);
+      eventEmitter.on('test:event', jest.fn());
+      eventEmitter.on('other:event', jest.fn());
+      expect(eventEmitter.eventNames()).toContain('test:event');
+      expect(eventEmitter.eventNames()).toContain('other:event');
+      expect(eventEmitter.eventNames().length).toBe(2);
+    });
   });
 
   describe('InputManager', () => {

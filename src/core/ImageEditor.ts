@@ -16,6 +16,8 @@ import { BrightnessAdjustmentTool } from '../tools/BrightnessAdjustmentTool';
 import { ContrastAdjustmentTool } from '../tools/ContrastAdjustmentTool';
 import { SaturationAdjustmentTool } from '../tools/SaturationAdjustmentTool';
 import { HueAdjustmentTool } from '../tools/HueAdjustmentTool';
+import { RGBAdjustmentTool } from '../tools/RGBAdjustmentTool';
+import { AutoEnhanceTool } from '../tools/AutoEnhanceTool';
 
 export class ImageEditor {
   private config: ImageEditorConfig;
@@ -103,6 +105,8 @@ export class ImageEditor {
     this.tools.set('contrast', new ContrastAdjustmentTool(this, this.canvasManager));
     this.tools.set('saturation', new SaturationAdjustmentTool(this));
     this.tools.set('hue', new HueAdjustmentTool(this));
+    this.tools.set('rgb', new RGBAdjustmentTool(this, this.canvasManager));
+    this.tools.set('auto-enhance', new AutoEnhanceTool(this, this.canvasManager));
 
     // Setup event delegation for tool interactions
     this.setupEventDelegation();
@@ -264,7 +268,7 @@ export class ImageEditor {
     }
   }
 
-  public async exportImage(format: string, quality?: number): Promise<Blob> {
+  public async exportImage(format: string, quality?: number): Promise<Blob | undefined> {
     return new Promise((resolve) => {
       const canvas = this.canvasManager.getCanvas();
       canvas.toBlob(
@@ -272,6 +276,8 @@ export class ImageEditor {
           if (blob) {
             this.eventEmitter.emit('image:exported', { format, blob });
             resolve(blob);
+          } else {
+            resolve(undefined);
           }
         },
         format,
