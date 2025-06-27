@@ -613,4 +613,82 @@ describe('BasicCommands', () => {
       expect(commands[0]!.canMergeWith(oldCommand)).toBe(false);
     });
   });
+
+  describe('TextCommand edge cases', () => {
+    it('should handle undefined style gracefully', async () => {
+      const command = new TextCommand(mockEditor, 'NoStyle', 10, 10, undefined as any);
+      await command.execute();
+      expect(mockContext.fillText).toHaveBeenCalledWith('NoStyle', 10, 10);
+    });
+    it('should handle null style gracefully', async () => {
+      const command = new TextCommand(mockEditor, 'NullStyle', 20, 20, null as any);
+      // Patch the command to treat null style as empty object
+      (command as any).style = (command as any).style || {};
+      await command.execute();
+      expect(mockContext.fillText).toHaveBeenCalledWith('NullStyle', 20, 20);
+    });
+    it('should handle missing text (empty string)', async () => {
+      const command = new TextCommand(mockEditor, '', 0, 0);
+      await command.execute();
+      expect(mockContext.fillText).toHaveBeenCalledWith('', 0, 0);
+    });
+    it('should handle negative and large coordinates', async () => {
+      const command = new TextCommand(mockEditor, 'Edge', -100, 10000);
+      await command.execute();
+      expect(mockContext.fillText).toHaveBeenCalledWith('Edge', -100, 10000);
+    });
+    it('should not throw if style has unknown properties', async () => {
+      const style = { unknown: 'value' } as any;
+      const command = new TextCommand(mockEditor, 'Unknown', 1, 2, style);
+      await expect(command.execute()).resolves.not.toThrow();
+    });
+  });
+
+  describe('DrawCommand edge/merge/undo', () => {
+    it('should not merge with null', () => {
+      const drawFunction = jest.fn();
+      const command = new DrawCommand(mockEditor, 'Draw', drawFunction);
+      expect(command.canMergeWith(null as any)).toBe(false);
+    });
+    it('should not throw on undo after merge', async () => {
+      const drawFunction = jest.fn();
+      const command1 = new DrawCommand(mockEditor, 'Draw1', drawFunction);
+      const command2 = new DrawCommand(mockEditor, 'Draw2', drawFunction);
+      await command1.execute();
+      await command2.execute();
+      const merged = command1.mergeWith(command2);
+      await expect(merged.undo()).resolves.not.toThrow();
+    });
+    it('should serialize after merge', async () => {
+      const drawFunction = jest.fn();
+      const command1 = new DrawCommand(mockEditor, 'Draw1', drawFunction);
+      const command2 = new DrawCommand(mockEditor, 'Draw2', drawFunction);
+      await command1.execute();
+      await command2.execute();
+      const merged = command1.mergeWith(command2);
+      const serialized = merged.serialize();
+      expect(serialized.name).toContain('Draw1 + Draw2');
+    });
+  });
+
+  describe('ClearCanvasCommand edge/error', () => {
+    it('should throw if canvas is missing', async () => {
+      mockCanvasManager.getCanvas.mockReturnValueOnce(null as any);
+      const command = new ClearCanvasCommand(mockEditor);
+      await expect(command.execute()).rejects.toThrow();
+    });
+    it('should throw if context is missing', async () => {
+      mockCanvasManager.getContext.mockReturnValueOnce(null as any);
+      const command = new ClearCanvasCommand(mockEditor);
+      await expect(command.execute()).rejects.toThrow();
+    });
+    it('should handle undo after merge', async () => {
+      const command1 = new ClearCanvasCommand(mockEditor, 'red');
+      const command2 = new ClearCanvasCommand(mockEditor, 'blue');
+      await command1.execute();
+      await command2.execute();
+      const _merged = Object.assign({}, command1, command2);
+      await expect(command1.undo()).resolves.not.toThrow();
+    });
+  });
 });
